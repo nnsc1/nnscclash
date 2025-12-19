@@ -1,6 +1,6 @@
 {
   "name": "NNSC Clash",
-  "short_name": "NNSC",
+  "short_name": "NNSC Clash",
   "description": "Arcade 4v4 Soccer featuring the NNSC Team.",
   "start_url": "./index.html",
   "display": "standalone",
