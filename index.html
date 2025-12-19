@@ -5,16 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>NNSC Clash: Pro Dribble</title>
+    <title>NNSC Clash: MVP Dribble Update</title>
     <style>
         :root { --gold: #ffd700; --blue: #00d2ff; --red: #ff3131; --neon: #39ff14; --dark: #05050a; }
         body { margin: 0; overflow: hidden; background: #000; font-family: 'Arial Black', sans-serif; color: white; touch-action: none; }
+        
         #pwa-lock { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--dark); z-index: 20000; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
+        .ios-icon { width: 40px; height: 40px; background: white; border-radius: 8px; margin: 10px; color: black; display: flex; align-items: center; justify-content: center; }
+
         #orientation-lock { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--dark); z-index: 10000; align-items: center; justify-content: center; }
         @media (orientation: portrait) { #orientation-lock { display: flex; } }
-        #mvp-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
-        .mvp-card { background: linear-gradient(145deg, #222, #000); border: 3px solid var(--gold); border-radius: 20px; padding: 30px; text-align: center; box-shadow: 0 0 50px rgba(255, 215, 0, 0.3); animation: mvpSlide 0.8s ease-out; }
+
+        /* MVP Overlay */
+        #mvp-overlay { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.9); z-index: 1000; flex-direction: column; align-items: center; justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+        .mvp-card { 
+            background: linear-gradient(145deg, #222, #000); border: 3px solid var(--gold); border-radius: 20px;
+            padding: 30px; text-align: center; box-shadow: 0 0 50px rgba(255, 215, 0, 0.3);
+            animation: mvpSlide 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
         @keyframes mvpSlide { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* Existing UI Styles */
+        #stats-cast { position: absolute; left: -300px; top: 80px; width: 180px; background: rgba(0,0,0,0.85); border-left: 5px solid var(--gold); padding: 10px; transition: left 0.5s; z-index: 70; font-size: 0.7rem; border-radius: 0 10px 10px 0; }
+        #stats-cast.active { left: 0; }
         #menu { position: absolute; width: 100%; height: 100%; background: radial-gradient(circle, #1a1a2e 0%, #000 100%); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .sel-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; width: 90%; margin-top: 10px; }
         .slot { background: rgba(255,255,255,0.05); border: 1px solid var(--blue); border-radius: 8px; padding: 5px; text-align: center; font-size: 0.6rem; }
@@ -30,18 +47,28 @@
 </head>
 <body>
 
-<div id="pwa-lock"><h2 style="color: var(--gold)">NNSC CLASH</h2><p>Add to Home Screen to Play</p></div>
+<div id="pwa-lock">
+    <h2 style="color: var(--gold)">NNSC CLASH</h2>
+    <p>Add to Home Screen to Play</p>
+    <div style="display:flex; align-items:center;">1. Tap <span class="ios-icon">⎋</span> then 2. "Add to Home Screen" <span class="ios-icon">+</span></div>
+</div>
+
 <div id="orientation-lock"><div><h2 style="color: var(--gold)">ROTATE TO PLAY</h2></div></div>
 <div id="flash-overlay"></div>
 
 <div id="mvp-overlay">
     <div class="mvp-card">
-        <div style="color: var(--gold); font-size: 1.2rem;">MATCH MVP</div>
+        <div style="color: var(--gold); font-size: 1.2rem; letter-spacing: 2px;">MATCH MVP</div>
         <canvas id="mvp-canvas" width="100" height="120"></canvas>
-        <h2 id="mvp-name">PLAYER</h2>
-        <div id="mvp-stats" style="color: #aaa;"></div>
-        <button style="margin-top: 20px; padding: 10px 30px; background: var(--blue); color: white; border: none; border-radius: 20px;" onclick="location.reload()">REMATCH</button>
+        <h2 id="mvp-name" style="margin: 5px 0;">PLAYER</h2>
+        <div id="mvp-stats" style="font-size: 0.8rem; color: #aaa;">Goals: 0 | Touches: 0</div>
+        <button style="margin-top: 20px; padding: 10px 30px; background: var(--blue); color: white; border: none; border-radius: 20px; font-weight: bold;" onclick="location.reload()">REMATCH</button>
     </div>
+</div>
+
+<div id="stats-cast">
+    <div style="color: var(--gold); margin-bottom: 5px;">LIVE BROADCAST</div>
+    <div id="possession-stat">Possession: 50/50</div>
 </div>
 
 <div id="goal-banner">
@@ -50,7 +77,7 @@
 </div>
 
 <div id="menu">
-    <div style="display:flex; gap:10px;">
+    <div id="locker-room-display" style="display:flex; gap:10px;">
         <canvas id="pre-0" width="60" height="90"></canvas>
         <canvas id="pre-1" width="60" height="90"></canvas>
         <canvas id="pre-2" width="60" height="90"></canvas>
@@ -62,7 +89,7 @@
 
 <div id="hud">
     <div id="scoreboard" style="font-size: 1.5rem;">BLUE 0 - 0 RED</div>
-    <div id="timer" style="color: var(--gold);">01:30</div>
+    <div id="timer" style="color: var(--gold);">05:00</div>
 </div>
 
 <div id="controls">
@@ -70,7 +97,7 @@
     <div class="btn-grid">
         <div class="g-btn" id="pass-btn" style="background: var(--blue);">PASS</div>
         <div class="g-btn" id="shoot-btn" style="background: var(--red);">SHOOT</div>
-        <div class="g-btn" id="pwr-btn" style="background: var(--neon); color: black;">PWR</div>
+        <div class="g-btn" id="pwr-btn" style="background: var(--neon); color: black;">PWR<div id="pwr-fill" style="position:absolute; bottom:0; height:4px; background:white; width:0%;"></div></div>
         <div class="g-btn" id="switch-btn" style="background: var(--gold); color: black;">SWITCH</div>
     </div>
 </div>
@@ -78,6 +105,11 @@
 <canvas id="gameCanvas"></canvas>
 
 <script>
+// iOS Check
+if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.navigator.standalone) {
+    document.getElementById('pwa-lock').style.display = 'flex';
+}
+
 const PLAYER_DB = {
     'angelolee1919': { nick: 'ANGELO', pwr: 'DOG POWER', skin: '#8d5524' },
     'Tyranizard89': { nick: 'TYRAN', pwr: 'DINOSAUR', skin: '#8d5524' },
@@ -103,12 +135,17 @@ const PLAYER_DB = {
 };
 
 let userTeamKeys = [Object.keys(PLAYER_DB)[0], Object.keys(PLAYER_DB)[3], Object.keys(PLAYER_DB)[7], Object.keys(PLAYER_DB)[10]];
-let players = [], ball = { x: 0, y: 0, vx: 0, vy: 0, r: 8, possessor: null };
-let matchActive = false, score = [0, 0], matchTime = 90, isCelebrating = false;
+let comTeamKeys = [], players = [];
+// BALL UPDATE: added owner property
+let ball = { x: 0, y: 0, vx: 0, vy: 0, r: 8, lastTouch: null, owner: null };
+let matchActive = false, score = [0, 0], matchTime = 300; // FIX 1: Set to 300s (5 mins)
+let timerInt = null;
+let isCelebrating = false;
 
-function drawAvatar(ctx, x, y, k, color, isSelected = false) {
+function drawAvatar(ctx, x, y, k, color, isSelected = false, pObj = null) {
     const d = PLAYER_DB[k];
     ctx.save(); ctx.translate(x, y);
+    if(pObj?.pwrActive) { ctx.shadowBlur = 15; ctx.shadowColor = '#39ff14'; }
     ctx.fillStyle = color; ctx.beginPath(); ctx.roundRect(-12, 5, 24, 18, 4); ctx.fill();
     ctx.fillStyle = d.skin; ctx.beginPath(); ctx.arc(0, -5, 11, 0, 7); ctx.fill();
     ctx.fillStyle = 'black'; ctx.beginPath(); ctx.arc(-4, -6, 1.5, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(4, -6, 1.5, 0, 7); ctx.fill();
@@ -124,19 +161,21 @@ function startGame() {
     document.getElementById('hud').style.display = 'block';
     document.getElementById('controls').style.display = 'block';
     canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+    comTeamKeys = Object.keys(PLAYER_DB).filter(k => !userTeamKeys.includes(k)).sort(() => 0.5-Math.random()).slice(0, 4);
     
-    let comKeys = Object.keys(PLAYER_DB).filter(k => !userTeamKeys.includes(k)).sort(() => 0.5-Math.random()).slice(0, 4);
     players = [];
-    userTeamKeys.forEach((k, i) => players.push({ key: k, team: 'u', pos: i, x: 150, y: (canvas.height/5)*(i+1), cur: i===3, s: 4.5, goals: 0, touches: 0 }));
-    comKeys.forEach((k, i) => players.push({ key: k, team: 'c', pos: i, x: canvas.width-150, y: (canvas.height/5)*(i+1), cur: false, s: 4, goals: 0, touches: 0 }));
+    userTeamKeys.forEach((k, i) => players.push({ key: k, team: 'u', pos: i, x: 150, y: (canvas.height/5)*(i+1), cur: i===3, s: 4.5, pwrActive: false, goals: 0, touches: 0, angle: 0 }));
+    comTeamKeys.forEach((k, i) => players.push({ key: k, team: 'c', pos: i, x: canvas.width-150, y: (canvas.height/5)*(i+1), cur: false, s: 4, pwrActive: false, goals: 0, touches: 0, angle: Math.PI }));
     
     resetBall();
     matchActive = true;
+    matchTime = 300; // Reset time to 5 mins
     requestAnimationFrame(loop);
     
-    const timerInt = setInterval(() => {
+    if(timerInt) clearInterval(timerInt);
+    timerInt = setInterval(() => { 
         if(matchActive && !isCelebrating) {
-            matchTime--;
+            matchTime--; 
             let m = Math.floor(matchTime/60), s = matchTime%60;
             document.getElementById('timer').innerText = `${m}:${s < 10 ? '0'+s : s}`;
             if(matchTime <= 0) { clearInterval(timerInt); showMVP(); }
@@ -145,14 +184,14 @@ function startGame() {
 }
 
 function resetBall() { 
-    ball = { x: window.innerWidth/2, y: window.innerHeight/2, vx: 0, vy: 0, r: 8, possessor: null }; 
+    ball = { x: window.innerWidth/2, y: window.innerHeight/2, vx: 0, vy: 0, r: 8, lastTouch: null, owner: null }; 
 }
 
 function handleGoal(tIdx) {
     score[tIdx]++;
     isCelebrating = true;
-    if(ball.possessor) ball.possessor.goals++;
-    document.getElementById('scorer-name').innerText = ball.possessor ? PLAYER_DB[ball.possessor.key].nick : "GOAL";
+    if(ball.lastTouch) ball.lastTouch.goals++;
+    document.getElementById('scorer-name').innerText = ball.lastTouch ? PLAYER_DB[ball.lastTouch.key].nick : "GOAL";
     document.getElementById('goal-banner').style.display = 'block';
     document.getElementById('flash-overlay').style.opacity = '1';
     setTimeout(() => document.getElementById('flash-overlay').style.opacity = '0', 100);
@@ -175,13 +214,18 @@ function loop() {
     ctx.strokeStyle = 'white'; ctx.lineWidth = 2; ctx.strokeRect(40, 20, cw-80, ch-40);
     ctx.beginPath(); ctx.moveTo(cw/2, 20); ctx.lineTo(cw/2, ch-20); ctx.stroke();
 
+    // PHYSICS & DRIBBLING LOGIC
     if (!isCelebrating) {
-        if (ball.possessor) {
-            ball.x = ball.possessor.x + (ball.possessor.team === 'u' ? 12 : -12);
-            ball.y = ball.possessor.y + 10;
+        if (ball.owner) {
+            // Ball sticks to player
+            ball.x = ball.owner.x + Math.cos(ball.owner.angle) * 15;
+            ball.y = ball.owner.y + Math.sin(ball.owner.angle) * 15;
             ball.vx = 0; ball.vy = 0;
+            ball.lastTouch = ball.owner;
         } else {
-            ball.x += ball.vx; ball.y += ball.vy; ball.vx *= 0.98; ball.vy *= 0.98;
+            // Loose ball physics
+            ball.x += ball.vx; ball.y += ball.vy; 
+            ball.vx *= 0.96; ball.vy *= 0.96; // Stronger friction for better pickup
             if(ball.y < 25 || ball.y > ch-25) ball.vy *= -1;
             if(ball.x < 45 || ball.x > cw-45) {
                 if(ball.y > ch/2-60 && ball.y < ch/2+60) handleGoal(ball.x < cw/2 ? 1 : 0);
@@ -190,55 +234,94 @@ function loop() {
         }
     }
 
-    // AI DECISIONS
-    let closestToBall = players.reduce((prev, curr) => 
+    let closestCom = players.filter(p => p.team === 'c').reduce((prev, curr) => 
         Math.hypot(curr.x-ball.x, curr.y-ball.y) < Math.hypot(prev.x-ball.x, prev.y-ball.y) ? curr : prev);
 
     players.forEach(p => {
         if(!isCelebrating) {
-            if(p.cur) {
-                p.x += joy.x*5; p.y += joy.y*5;
-            } else {
-                let tx, ty;
-                // IMPROVED TEAM AI
-                if(ball.possessor && ball.possessor.team === p.team) { // Attack Support
-                    tx = ball.x + (p.team === 'u' ? 100 : -100);
-                    ty = p.pos === 1 ? ch*0.2 : (p.pos === 2 ? ch*0.8 : ch/2);
-                } else if (p === closestToBall) { // Chase Ball
-                    tx = ball.x; ty = ball.y;
-                } else { // Defensive Positioning
-                    tx = cw * (p.team === 'u' ? 0.2 : 0.8);
-                    ty = p.pos === 0 ? ch/2 : (p.pos === 1 ? ch*0.3 : ch*0.7);
+            let dx=0, dy=0;
+            
+            // HUMAN CONTROL
+            if(p.cur) { 
+                if (joy.active) {
+                    dx = joy.x*5; dy = joy.y*5;
+                    p.angle = Math.atan2(joy.y, joy.x); // Face movement direction
                 }
-                let d = Math.hypot(tx-p.x, ty-p.y);
-                if(d > 5) { p.x += ((tx-p.x)/d)*p.s; p.y += ((ty-p.y)/d)*p.s; }
             }
+            else {
+                // AI LOGIC
+                let tx, ty;
+                if(p.team === 'c') {
+                    // Computer
+                    if(p === closestCom && !ball.owner || (ball.owner && ball.owner.team === 'u')) { 
+                        tx = ball.x; ty = ball.y; // Chase ball/player
+                    } else { 
+                        // Zonal Defense
+                        tx = cw * (p.pos === 0 ? 0.9 : 0.75);
+                        ty = p.pos === 0 ? ch/2 : (p.pos === 1 ? ch*0.25 : (p.pos === 2 ? ch*0.75 : ch/2));
+                    }
+                } else { 
+                    // FIX 2: IMPROVED USER AI
+                    // Goalie (Pos 0) stays back, others support
+                    if (p.pos === 0) {
+                        tx = cw * 0.1; ty = ch/2;
+                    } else {
+                        // Move upfield if ball is ahead, stay behind ball if attacking to support
+                        let offX = (ball.x > cw/2) ? -50 : 50; 
+                        tx = ball.x + offX; 
+                        ty = ball.y + (p.pos === 1 ? -100 : 100);
+                        // Clamp to zones
+                        tx = Math.max(cw*0.1, Math.min(cw*0.9, tx));
+                    }
+                }
+                
+                let distX = tx-p.x, distY = ty-p.y, dist = Math.hypot(distX,distY);
+                if(dist > 5) { 
+                    dx = (distX/dist)*p.s; dy = (distY/dist)*p.s; 
+                    p.angle = Math.atan2(dy, dx);
+                }
+            }
+            
+            p.x += dx; p.y += dy;
 
-            // POSSESSION LOGIC (GLUE)
-            let dist = Math.hypot(p.x-ball.x, p.y-ball.y);
-            if(dist < 25) {
-                if(!ball.possessor || ball.possessor.team !== p.team) {
-                    ball.possessor = p;
+            // FIX 3: COLLISION / TACKLING
+            if(Math.hypot(p.x-ball.x, p.y-ball.y) < 20) { 
+                if (ball.owner === null) {
+                    // Pick up loose ball
+                    ball.owner = p;
                     p.touches++;
+                } else if (ball.owner !== p && ball.owner.team !== p.team) {
+                    // Steal from opponent
+                    ball.owner = p;
+                    p.touches++;
+                    // Slight knockback to previous owner
+                    // (Optional visual flair could go here)
                 }
             }
         }
+        
         p.x = Math.max(40, Math.min(cw-40, p.x)); p.y = Math.max(20, Math.min(ch-20, p.y));
-        drawAvatar(ctx, p.x, p.y, p.key, p.team==='u'?'#00d2ff':'#ff3131', p.cur);
+        drawAvatar(ctx, p.x, p.y, p.key, p.team==='u'?'#00d2ff':'#ff3131', p.cur, p);
     });
 
+    // Draw Ball
     ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.r, 0, 7); ctx.fill();
+    // Draw indicator under ball owner
+    if(ball.owner) {
+        ctx.strokeStyle = '#fff'; ctx.beginPath(); ctx.arc(ball.owner.x, ball.owner.y, 25, 0, 7); ctx.stroke();
+    }
+
     document.getElementById('scoreboard').innerText = `BLUE ${score[0]} - ${score[1]} RED`;
     requestAnimationFrame(loop);
 }
 
+// Controls & Selection
 const keys = Object.keys(PLAYER_DB);
 const selDiv = document.getElementById('selectors');
 ["GK", "DEF", "MID", "ATT"].forEach((pos, i) => {
     selDiv.innerHTML += `<div class="slot"><b>${pos}</b><br><span id="n-${i}">${PLAYER_DB[userTeamKeys[i]].nick}</span><br>
-    <button onclick="cycle(${i},1)" style="background:var(--blue);border:none;color:white;border-radius:4px;padding:2px 5px;margin-top:2px;">CYCLE</button></div>`;
+    <button onclick="cycle(${i},1)" style="background:var(--blue);border:none;color:white;border-radius:4px;">CHANGE</button></div>`;
 });
-
 function cycle(s, d) {
     let i = keys.indexOf(userTeamKeys[s]);
     do { i = (i+d+keys.length)%keys.length; } while(userTeamKeys.includes(keys[i]));
@@ -249,34 +332,39 @@ function cycle(s, d) {
 cycle(0,0);
 
 let joy = { x: 0, y: 0, active: false };
+
+// SHOOT / PASS LOGIC
+function kickBall(power, lift) {
+    if (ball.owner && ball.owner.cur) { // Only kick if you own the ball
+        let p = ball.owner;
+        ball.owner = null; // Release ball
+        let ang = p.angle;
+        ball.vx = Math.cos(ang) * power;
+        ball.vy = Math.sin(ang) * power;
+    }
+}
+
 window.addEventListener('touchstart', e => {
     const t = e.touches[0], b = document.getElementById('joy-base').getBoundingClientRect();
     if(t.clientX > b.left && t.clientX < b.right) joy.active = true;
     
-    let p = players.find(pl => pl.cur);
-    if(e.target.id === 'shoot-btn' && ball.possessor === p) {
-        ball.possessor = null;
-        ball.vx = (p.team === 'u' ? 1 : -1) * 25;
-        ball.vy = (innerHeight/2 - ball.y) * 0.1;
-    }
-    if(e.target.id === 'pass-btn' && ball.possessor === p) {
-        ball.possessor = null;
-        ball.vx = (p.team === 'u' ? 1 : -1) * 15;
-    }
-    if(e.target.id === 'switch-btn') {
-        let i = players.findIndex(pl=>pl.cur);
-        players[i].cur = false;
-        players[(i+1)%4].cur = true;
+    // Updated button logic
+    if(e.target.id === 'shoot-btn') kickBall(22, 0); // Shoot fast
+    if(e.target.id === 'pass-btn') kickBall(12, 0);  // Pass slower
+    
+    if(e.target.id === 'switch-btn') { 
+        // Find player closest to ball to switch to
+        let currentIdx = players.findIndex(p=>p.cur);
+        players[currentIdx].cur = false; 
+        
+        let bestP = players.filter(p=>p.team==='u').reduce((prev, curr) => 
+            Math.hypot(curr.x-ball.x, curr.y-ball.y) < Math.hypot(prev.x-ball.x, prev.y-ball.y) ? curr : prev
+        );
+        bestP.cur = true;
     }
 });
-window.addEventListener('touchmove', e => { 
-    if(joy.active) { 
-        const t = e.touches[0], b = document.getElementById('joy-base').getBoundingClientRect();
-        joy.x = Math.max(-1, Math.min(1, (t.clientX-(b.left+45))/45));
-        joy.y = Math.max(-1, Math.min(1, (t.clientY-(b.top+45))/45));
-    } 
-});
-window.addEventListener('touchend', () => { joy.active = false; joy.x = 0; joy.y = 0; });
+window.addEventListener('touchmove', e => { if(joy.active) { const t = e.touches[0], b = document.getElementById('joy-base').getBoundingClientRect(); joy.x = (t.clientX-(b.left+45))/45; joy.y = (t.clientY-(b.top+45))/45; } });
+window.addEventListener('touchend', () => joy.active = false);
 </script>
 </body>
 </html>
