@@ -3,15 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>NNSC Clash: Broadcast Pro</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>NNSC Clash: Pro Edition</title>
     <style>
         :root { --gold: #ffd700; --blue: #00d2ff; --red: #ff3131; --neon: #39ff14; --dark: #05050a; }
         body { margin: 0; overflow: hidden; background: #000; font-family: 'Arial Black', sans-serif; color: white; touch-action: none; }
         
+        /* iOS PWA LOCK */
+        #pwa-lock { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: var(--dark); z-index: 20000; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px;
+        }
+        .ios-icon { width: 60px; height: 60px; background: white; border-radius: 12px; margin: 20px; color: black; display: flex; align-items: center; justify-content: center; font-size: 2rem; }
+
         #orientation-lock { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--dark); z-index: 10000; align-items: center; justify-content: center; text-align: center; }
         @media (orientation: portrait) { #orientation-lock { display: flex; } }
 
-        /* Intro Overlay */
+        /* Broadcast UI */
+        #stats-cast {
+            position: absolute; left: -300px; top: 80px; width: 180px; background: rgba(0,0,0,0.85);
+            border-left: 5px solid var(--gold); padding: 10px; transition: left 0.5s ease-in-out; z-index: 70;
+            font-size: 0.7rem; border-radius: 0 10px 10px 0;
+        }
+        #stats-cast.active { left: 0; }
+
         #intro-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: radial-gradient(circle, #1a1a2e 0%, #000 100%); z-index: 500;
@@ -26,39 +42,35 @@
         @keyframes cardPop { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         .pwr-badge { background: var(--neon); color: black; padding: 2px 6px; border-radius: 4px; font-size: 0.55rem; margin-top: 5px; font-weight: 900; }
 
-        /* Stats Cast Overlay */
-        #stats-cast {
-            position: absolute; left: -300px; top: 80px; width: 180px; background: rgba(0,0,0,0.85);
-            border-left: 5px solid var(--gold); padding: 10px; transition: left 0.5s ease-in-out; z-index: 70;
-            font-size: 0.7rem; border-radius: 0 10px 10px 0;
-        }
-        #stats-cast.active { left: 0; }
-
-        /* Goal Banner & Flashes */
-        #goal-banner { display: none; position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%); z-index: 200; text-align: center; }
-        #flash-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: white; opacity: 0; pointer-events: none; z-index: 199; }
-
-        /* UI/Menu */
         #menu { position: absolute; width: 100%; height: 100%; background: radial-gradient(circle, #1a1a2e 0%, #000 100%); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px; }
-        #locker-room-display { display: flex; justify-content: center; align-items: flex-end; gap: 10px; width: 100%; height: 110px; }
-        .locker-canvas { background: transparent; width: 60px; height: 90px; }
         .sel-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; width: 95%; max-width: 800px; margin-top: 10px; }
         .slot { background: rgba(255,255,255,0.05); border: 1px solid var(--blue); border-radius: 8px; padding: 5px; text-align: center; font-size: 0.6rem; }
-        .cycle-btn { background: var(--blue); border: none; color: white; padding: 4px; border-radius: 4px; }
-
+        
         #hud { display: none; position: absolute; top: 10px; width: 100%; text-align: center; z-index: 60; pointer-events: none; }
         #controls { display: none; position: absolute; bottom: 0; width: 100%; height: 140px; z-index: 50; }
         #joy-base { position: absolute; bottom: 20px; left: 40px; width: 90px; height: 90px; background: rgba(255,255,255,0.1); border-radius: 50%; border: 2px solid white; }
         #joy-stick { position: absolute; top: 25px; left: 25px; width: 40px; height: 40px; background: white; border-radius: 50%; }
-        
         .btn-grid { position: absolute; bottom: 20px; right: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .g-btn { width: 55px; height: 55px; border-radius: 50%; border: 2px solid white; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: bold; position: relative; }
-        #pwr-fill { position: absolute; bottom: -5px; width: 100%; height: 4px; background: var(--neon); width: 100%; }
+        #pwr-fill { position: absolute; bottom: -5px; width: 100%; height: 4px; background: var(--neon); }
 
         canvas#gameCanvas { display: none; }
+        #goal-banner { display: none; position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%); z-index: 200; text-align: center; }
+        #flash-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: white; opacity: 0; pointer-events: none; z-index: 199; }
     </style>
 </head>
 <body>
+
+<div id="pwa-lock">
+    <h2 style="color: var(--gold)">NNSC CLASH PRO</h2>
+    <p>To play, you must add this game to your Home Screen.</p>
+    <div style="display: flex; align-items: center; font-size: 0.8rem;">
+        1. Tap the Share button <span class="ios-icon" style="width:30px; height:30px; font-size:1rem; margin:10px;">⎋</span>
+    </div>
+    <div style="display: flex; align-items: center; font-size: 0.8rem;">
+        2. Select "Add to Home Screen" <span class="ios-icon" style="width:30px; height:30px; font-size:1rem; margin:10px;">+</span>
+    </div>
+</div>
 
 <div id="orientation-lock"><div><h2 style="color: var(--gold)">PLEASE ROTATE DEVICE</h2></div></div>
 <div id="flash-overlay"></div>
@@ -66,7 +78,7 @@
 <div id="stats-cast">
     <div style="color: var(--gold); margin-bottom: 5px;">LIVE MATCH FACTS</div>
     <div id="possession-stat">Possession: 50/50</div>
-    <div id="shots-stat">Pass Accuracy: 88%</div>
+    <div id="shots-stat">Intensity: High</div>
 </div>
 
 <div id="intro-overlay">
@@ -80,11 +92,11 @@
 </div>
 
 <div id="menu">
-    <div id="locker-room-display">
-        <canvas id="pre-0" class="locker-canvas"></canvas>
-        <canvas id="pre-1" class="locker-canvas"></canvas>
-        <canvas id="pre-2" class="locker-canvas"></canvas>
-        <canvas id="pre-3" class="locker-canvas"></canvas>
+    <div id="locker-room-display" style="display:flex; gap:10px; margin-bottom:10px;">
+        <canvas id="pre-0" width="60" height="90"></canvas>
+        <canvas id="pre-1" width="60" height="90"></canvas>
+        <canvas id="pre-2" width="60" height="90"></canvas>
+        <canvas id="pre-3" width="60" height="90"></canvas>
     </div>
     <div class="sel-grid" id="selectors"></div>
     <button style="margin-top: 15px; padding: 12px 50px; border-radius: 30px; background: var(--red); color: white; border: none; font-weight: bold;" onclick="runIntro()">KICK OFF</button>
@@ -108,6 +120,13 @@
 <canvas id="gameCanvas"></canvas>
 
 <script>
+// iOS PWA ENFORCER
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+const isStandalone = window.navigator.standalone === true;
+if (isIOS && !isStandalone) {
+    document.getElementById('pwa-lock').style.display = 'flex';
+}
+
 const PLAYER_DB = {
     'angelolee1919': { nick: 'ANGELO', pwr: 'DOG POWER', skin: '#8d5524' },
     'Tyranizard89': { nick: 'TYRAN', pwr: 'DINOSAUR', skin: '#8d5524' },
@@ -134,7 +153,7 @@ const PLAYER_DB = {
 
 let userTeamKeys = [Object.keys(PLAYER_DB)[0], Object.keys(PLAYER_DB)[3], Object.keys(PLAYER_DB)[7], Object.keys(PLAYER_DB)[10]];
 let comTeamKeys = [], players = [], matchActive = false, score = [0, 0], ball = { x: 0, y: 0, vx: 0, vy: 0, r: 8, lastTouch: null };
-let pwrCooldown = 0, isCelebrating = false, shakeTime = 0, possession = [50, 50];
+let pwrCooldown = 0, isCelebrating = false, shakeTime = 0, possession = [50, 50], cornerTimer = 0;
 
 function drawAvatar(ctx, x, y, k, teamColor, isSelected = false, pObj = null) {
     const data = PLAYER_DB[k];
@@ -155,7 +174,6 @@ function runIntro() {
     const overlay = document.getElementById('intro-overlay');
     overlay.style.display = 'flex';
     comTeamKeys = Object.keys(PLAYER_DB).filter(k => !userTeamKeys.includes(k)).sort(() => 0.5 - Math.random()).slice(0, 4);
-    
     renderTeam("BLUE TEAM", userTeamKeys, '#00d2ff', () => {
         setTimeout(() => {
             renderTeam("RED TEAM", comTeamKeys, '#ff3131', () => {
@@ -193,7 +211,7 @@ function startGame() {
     comTeamKeys.forEach((k, i) => players.push({ key: k, team: 'c', pos: i, x: canvas.width-100, y: (canvas.height/5)*(i+1), cur: false, s: 4, pwrActive: false, pwrTimer: 0 }));
     resetBall();
     requestAnimationFrame(loop);
-    setInterval(triggerStats, 15000);
+    setInterval(triggerStats, 20000);
 }
 
 function resetBall() { ball = { x: window.innerWidth / 2, y: window.innerHeight / 2, vx: 0, vy: 0, r: 8, lastTouch: null }; }
@@ -208,7 +226,7 @@ function triggerStats() {
 function handleGoal(teamIndex) {
     score[teamIndex]++;
     isCelebrating = true;
-    document.getElementById('scorer-name').innerText = ball.lastTouch ? PLAYER_DB[ball.lastTouch.key].nick : "TEAM WORK";
+    document.getElementById('scorer-name').innerText = ball.lastTouch ? PLAYER_DB[ball.lastTouch.key].nick : "GOAL";
     document.getElementById('goal-banner').style.display = 'block';
     document.getElementById('flash-overlay').style.opacity = '1';
     setTimeout(() => { document.getElementById('flash-overlay').style.opacity = '0'; }, 100);
@@ -222,12 +240,7 @@ function loop() {
 
     ctx.save();
     if (shakeTime > 0) { ctx.translate(Math.random()*5-2.5, Math.random()*5-2.5); shakeTime--; }
-
     ctx.fillStyle = '#1a472a'; ctx.fillRect(0,0,cw,ch);
-    // Crowd Pulse Glow
-    let distToGoal = Math.min(ball.x, cw - ball.x);
-    if(distToGoal < 150) { ctx.shadowBlur = 30; ctx.shadowColor = 'rgba(255,255,255,0.2)'; }
-
     ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 2;
     ctx.strokeRect(40, 20, cw-80, ch-40);
     ctx.beginPath(); ctx.moveTo(cw/2, 20); ctx.lineTo(cw/2, ch-20); ctx.stroke();
@@ -235,21 +248,58 @@ function loop() {
     if (!isCelebrating) {
         ball.x += ball.vx; ball.y += ball.vy;
         ball.vx *= 0.985; ball.vy *= 0.985;
+        
+        // CORNER BUG FIX
+        const inCornerX = ball.x < 60 || ball.x > cw - 60;
+        const inCornerY = ball.y < 40 || ball.y > ch - 40;
+        if(inCornerX && inCornerY) {
+            cornerTimer++;
+            if(cornerTimer > 60) {
+                ball.vx = (cw/2 - ball.x) * 0.05;
+                ball.vy = (ch/2 - ball.y) * 0.05;
+                cornerTimer = 0;
+            }
+        } else { cornerTimer = 0; }
+
         if(ball.y < 20 || ball.y > ch-20) ball.vy *= -1;
         if(ball.x < 40 || ball.x > cw-40) {
             if(ball.y > ch/2-60 && ball.y < ch/2+60) handleGoal(ball.x < cw/2 ? 1 : 0);
-            else { ball.vx *= -1; shakeTime = 5; }
+            else { ball.vx *= -1; }
         }
     }
+
+    // FIND CLOSEST COM TO BALL FOR CHASE LOGIC
+    let closestCom = null;
+    let minDist = Infinity;
+    players.filter(p => p.team === 'c').forEach(p => {
+        let d = Math.sqrt((ball.x-p.x)**2 + (ball.y-p.y)**2);
+        if(d < minDist) { minDist = d; closestCom = p; }
+    });
 
     players.forEach(p => {
         if (!isCelebrating) {
             if (p.team === 'c' && !p.pwrActive && Math.random() < 0.005) { p.pwrActive = true; p.pwrTimer = 180; }
             if (p.pwrTimer > 0) { p.pwrTimer--; if(p.pwrTimer <= 0) p.pwrActive = false; }
-            if(p.cur) { p.x += joy.x * (p.pwrActive ? 8 : 5); p.y += joy.y * (p.pwrActive ? 8 : 5); }
-            else {
-                let tx = ball.x, ty = ball.y;
-                if (p.pos === 0) { tx = p.team==='u'?65:cw-65; ty = Math.max(ch/2-50, Math.min(ch/2+50, ball.y)); }
+            
+            if(p.cur) { 
+                p.x += joy.x * (p.pwrActive ? 8 : 5); p.y += joy.y * (p.pwrActive ? 8 : 5); 
+            } else {
+                // ZONAL AI LOGIC
+                let tx, ty;
+                if(p.team === 'c') {
+                    if(p === closestCom && ball.x > cw/2) { // Only closest chases ball in their half
+                        tx = ball.x; ty = ball.y;
+                    } else { // Others hold positions
+                        if(p.pos === 0) { tx = cw - 60; ty = Math.max(ch/2-50, Math.min(ch/2+50, ball.y)); } // GK
+                        else if(p.pos === 1) { tx = cw * 0.8; ty = ch * 0.3; } // DF TOP
+                        else if(p.pos === 2) { tx = cw * 0.8; ty = ch * 0.7; } // DF BTM
+                        else { tx = cw * 0.6; ty = ch/2; } // MID
+                    }
+                } else { // User AI
+                    if(p.pos === 0) { tx = 60; ty = Math.max(ch/2-50, Math.min(ch/2+50, ball.y)); }
+                    else { tx = cw * 0.3; ty = p.y; }
+                }
+
                 let dx = tx-p.x, dy = ty-p.y, dist = Math.sqrt(dx*dx+dy*dy);
                 if(dist > 5) { p.x += (dx/dist)*p.s; p.y += (dy/dist)*p.s; }
             }
@@ -257,7 +307,6 @@ function loop() {
             let dx = ball.x-p.x, dy = ball.y-p.y, d = Math.sqrt(dx*dx+dy*dy);
             if(d < 22) { 
                 ball.vx = dx*(p.pwrActive?1.1:0.6); ball.vy = dy*(p.pwrActive?1.1:0.6); ball.lastTouch = p; 
-                if(p.pwrActive) shakeTime = 10;
                 if(p.team === 'u') possession[0] = Math.min(70, possession[0]+0.1); else possession[0] = Math.max(30, possession[0]-0.1);
                 possession[1] = 100 - Math.floor(possession[0]);
             }
@@ -267,18 +316,18 @@ function loop() {
 
     ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.r, 0, 7); ctx.fill();
     ctx.restore();
-    
     document.getElementById('scoreboard').innerText = `BLUE ${score[0]} - ${score[1]} RED`;
     if (pwrCooldown > 0) { pwrCooldown -= 0.002; document.getElementById('pwr-fill').style.width = `${(1 - pwrCooldown) * 100}%`; }
     requestAnimationFrame(loop);
 }
 
 // Selection Logic
-const selDiv = document.getElementById('selectors');
 const keys = Object.keys(PLAYER_DB);
+const selDiv = document.getElementById('selectors');
 ["GK", "DEF", "MID", "ATT"].forEach((pos, i) => {
     selDiv.innerHTML += `<div class="slot"><b>${pos}</b><br><span id="name-${i}">${PLAYER_DB[userTeamKeys[i]].nick}</span><br>
-    <button class="cycle-btn" onclick="cycle(${i},-1)">◀</button> <button class="cycle-btn" onclick="cycle(${i},1)">▶</button></div>`;
+    <button style="background:var(--blue);border:none;color:white;padding:2px 8px;border-radius:4px;" onclick="cycle(${i},-1)">◀</button> 
+    <button style="background:var(--blue);border:none;color:white;padding:2px 8px;border-radius:4px;" onclick="cycle(${i},1)">▶</button></div>`;
 });
 function cycle(slot, dir) {
     let idx = keys.indexOf(userTeamKeys[slot]);
@@ -288,15 +337,17 @@ function cycle(slot, dir) {
     renderLocker();
 }
 function renderLocker() {
-    userTeamKeys.forEach((k, i) => drawAvatar(document.getElementById(`pre-${i}`).getContext('2d'), 30, 45, k, '#00d2ff'));
+    userTeamKeys.forEach((k, i) => {
+        const ctx = document.getElementById(`pre-${i}`).getContext('2d');
+        ctx.clearRect(0,0,60,90);
+        drawAvatar(ctx, 30, 45, k, '#00d2ff');
+    });
 }
 renderLocker();
 
-// Input
 let joy = { x: 0, y: 0, active: false };
 window.addEventListener('touchstart', e => {
-    const t = e.touches[0];
-    const b = document.getElementById('joy-base').getBoundingClientRect();
+    const t = e.touches[0], b = document.getElementById('joy-base').getBoundingClientRect();
     if(t.clientX > b.left && t.clientX < b.right) joy.active = true;
     if(e.target.id === 'pwr-btn' && pwrCooldown <= 0) { let p = players.find(p => p.cur); p.pwrActive = true; pwrCooldown = 1.0; setTimeout(() => p.pwrActive = false, 4000); }
     if(e.target.id === 'shoot-btn') { let p = players.find(p => p.cur); let dx = (p.team==='u'?innerWidth:0)-p.x, dy = (innerHeight/2)-p.y, d = Math.sqrt(dx*dx+dy*dy); ball.vx = (dx/d)*24; ball.vy = (dy/d)*24; shakeTime = 15; }
