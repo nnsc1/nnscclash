@@ -1,7 +1,7 @@
 {
   "name": "NNSC Clash",
-  "short_name": "CLSH",
-  "description": "Arcade 4v4 Soccer Game featuring the NNSC Roblox Team.",
+  "short_name": "NNSC",
+  "description": "Arcade 4v4 Soccer featuring the NNSC Team.",
   "start_url": "./index.html",
   "display": "standalone",
   "orientation": "landscape",
@@ -9,12 +9,12 @@
   "theme_color": "#ff007f",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/53/53283.png",
+      "src": "icon.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/53/53283.png",
+      "src": "icon.png",
       "sizes": "512x512",
       "type": "image/png"
     }
