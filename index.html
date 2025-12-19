@@ -3,80 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NNSC Clash</title>
+    <title>NNSC Clash: Locker Room</title>
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <style>
-        :root { --gold: #ffd700; --blue: #00d2ff; --pink: #ff007f; --neon: #39ff14; }
+        :root { --gold: #ffd700; --blue: #00d2ff; --red: #ff3131; --neon: #39ff14; --dark: #05050a; }
         body { margin: 0; overflow: hidden; background: #000; font-family: 'Arial Black', sans-serif; color: white; touch-action: none; }
         
-        #menu-screen {
-            position: absolute; width: 100%; height: 100%;
-            background: radial-gradient(circle, #1a1a2e 0%, #000 100%);
-            display: flex; flex-direction: column; align-items: center; z-index: 100; padding-top: 20px;
+        /* Menu & Locker Room */
+        #menu {
+            position: absolute; width: 100%; height: 100%; background: radial-gradient(circle, #1a1a2e 0%, #000 100%);
+            z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 20px;
         }
-        .header { font-size: 2.5rem; font-style: italic; color: var(--blue); text-shadow: 3px 3px var(--pink); margin-bottom: 10px; }
-        .selection-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 95%; max-width: 600px; }
-        .slot { background: rgba(255,255,255,0.05); border: 2px solid var(--blue); border-radius: 12px; padding: 8px; text-align: center; }
-        .selector { display: flex; align-items: center; justify-content: space-between; }
-        .arrow { background: var(--blue); border: none; color: white; padding: 10px; border-radius: 5px; width: 35px; cursor: pointer; }
-        .name-display { font-size: 0.9rem; font-weight: bold; width: 100px; overflow: hidden; }
+        #locker-room-display {
+            display: flex; justify-content: center; align-items: flex-end; gap: 20px;
+            width: 100%; height: 180px; margin-bottom: 10px; border-bottom: 2px solid rgba(255,255,255,0.1);
+        }
+        .locker-canvas { background: transparent; width: 80px; height: 120px; }
         
-        #hud { display: none; position: absolute; top: 10px; width: 100%; pointer-events: none; z-index: 60; text-align: center; }
-        #scoreboard { font-size: 1.8rem; text-shadow: 2px 2px #000; }
+        .sel-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 95%; max-width: 800px; }
+        .slot { background: rgba(255,255,255,0.05); border: 1px solid var(--blue); border-radius: 10px; padding: 5px; text-align: center; font-size: 0.7rem; }
+        .cycle-btn { background: var(--blue); border: none; color: white; padding: 8px; border-radius: 5px; margin: 2px; }
 
-        #controls { display: none; position: absolute; bottom: 0; width: 100%; height: 150px; z-index: 50; }
-        #joy-base { position: absolute; bottom: 20px; left: 20px; width: 100px; height: 100px; background: rgba(255,255,255,0.1); border-radius: 50%; }
+        /* HUD */
+        #hud { display: none; position: absolute; top: 10px; width: 100%; text-align: center; z-index: 60; pointer-events: none; }
+        #scoreboard { font-size: 1.8rem; text-shadow: 2px 2px #000; }
+        #timer { font-size: 1.2rem; color: var(--gold); }
+
+        /* Game UI */
+        #controls { display: none; position: absolute; bottom: 0; width: 100%; height: 180px; z-index: 50; }
+        #joy-base { position: absolute; bottom: 30px; left: 30px; width: 100px; height: 100px; background: rgba(255,255,255,0.1); border-radius: 50%; border: 2px solid white; }
         #joy-stick { position: absolute; top: 25px; left: 25px; width: 50px; height: 50px; background: white; border-radius: 50%; }
         
-        .btn-group { position: absolute; bottom: 20px; right: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .game-btn { width: 65px; height: 65px; border-radius: 50%; border: 3px solid white; color: white; font-weight: bold; font-size: 0.7rem; display: flex; align-items: center; justify-content: center; background: #333; pointer-events: auto; }
-        #shoot-btn { background: var(--pink); }
-        #pass-btn { background: var(--blue); }
-        #switch-btn { background: var(--gold); color: black; }
-        #pwr-btn { background: #555; color: white; border-color: #777; transition: 0.3s; }
-        #pwr-btn.ready { background: var(--neon); color: black; border-color: white; box-shadow: 0 0 15px var(--neon); }
-        
-        /* POWERUP ANIMATION OVERLAY */
-        #pwr-overlay { 
+        .btn-grid { position: absolute; bottom: 30px; right: 30px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .g-btn { width: 65px; height: 65px; border-radius: 50%; border: 3px solid white; color: white; font-weight: bold; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; }
+
+        #end-screen { 
             display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.8); z-index: 200; align-items: center; justify-content: center;
-            flex-direction: column; overflow: hidden;
+            background: rgba(0,0,0,0.9); z-index: 300; flex-direction: column; align-items: center; justify-content: center;
         }
-        .pwr-banner { 
-            width: 150%; background: var(--pink); color: white; padding: 20px; 
-            font-size: 3rem; text-align: center; transform: rotate(-5deg);
-            box-shadow: 0 0 50px var(--pink); text-shadow: 4px 4px black;
-            animation: slideIn 0.5s ease-out;
-        }
-        @keyframes slideIn { from { transform: translateX(-100%) rotate(-5deg); } to { transform: translateX(0) rotate(-5deg); } }
 
         canvas { display: none; }
     </style>
 </head>
 <body>
 
-<div id="pwr-overlay">
-    <div class="pwr-banner" id="pwr-text">POWERUP!</div>
+<div id="end-screen">
+    <h1 id="match-result" style="font-size: 3rem;">FULL TIME</h1>
+    <button style="padding: 15px 40px; background: var(--blue); color: white; border: none; border-radius: 20px;" onclick="returnToLocker()">RETURN TO LOCKER ROOM</button>
 </div>
 
-<div id="menu-screen">
-    <div class="header">NNSC CLASH</div>
-    <div class="selection-grid" id="selectors-container"></div>
-    <button id="start-btn" style="margin-top:15px; padding:10px 40px; background:var(--pink); color:white; border:none; border-radius:20px; font-weight:bold; cursor:pointer;">KICK OFF</button>
+<div id="menu">
+    <h1 style="color: var(--blue); margin: 0; font-size: 1.5rem;">NNSC LOCKER ROOM</h1>
+    <div id="locker-room-display">
+        <canvas id="pre-0" class="locker-canvas"></canvas>
+        <canvas id="pre-1" class="locker-canvas"></canvas>
+        <canvas id="pre-2" class="locker-canvas"></canvas>
+        <canvas id="pre-3" class="locker-canvas"></canvas>
+    </div>
+    <div class="sel-grid" id="selectors"></div>
+    <button style="margin-top: 15px; padding: 12px 60px; border-radius: 30px; background: var(--red); color: white; border: none; font-weight: bold;" onclick="startGame()">KICK OFF</button>
 </div>
 
 <div id="hud">
-    <div id="scoreboard">YOU 0 - 0 COM</div>
+    <div id="timer">05:00</div>
+    <div id="scoreboard">BLUE 0 - 0 RED</div>
 </div>
 
 <div id="controls">
     <div id="joy-base"><div id="joy-stick"></div></div>
-    <div class="btn-group">
-        <div class="game-btn" id="pass-btn">PASS</div>
-        <div class="game-btn" id="shoot-btn">SHOOT</div>
-        <div class="game-btn" id="switch-btn">SWITCH</div>
-        <div class="game-btn" id="pwr-btn">PWR</div>
+    <div class="btn-grid">
+        <div class="g-btn" style="background: var(--blue)">PASS</div>
+        <div class="g-btn" id="shoot-btn" style="background: #fff; color: #000;">SHOOT</div>
+        <div class="g-btn" id="switch-btn" style="background: var(--gold); color: black;">SWITCH</div>
+        <div class="g-btn" id="pwr-btn" style="background: var(--neon); color: black;">PWR</div>
     </div>
 </div>
 
@@ -84,218 +84,215 @@
 
 <script>
 const PLAYER_DB = {
-    '15Goalies': { nick: 'CHRIS B', gk: 1, lb: 9, cb: 5, rb: 8, cm: 2, lw: 1, rw: 1, st: 1, pwr: 'THE ROOKIE', skin: '#ffdbac' },
-    '1300Melvin': { nick: 'MELVIN', gk: 0, lb: 0, cb: 0, rb: 0, cm: 5, lw: 9, rw: 9, st: 9, pwr: 'DEPENDENCY', skin: '#ffffff', hat: 'grad' },
-    'angelolee1919': { nick: 'ANGELO', gk: 9, lb: 8, cb: 5, rb: 8, cm: 9, lw: 9, rw: 9, st: 9, pwr: 'DOG POWER', skin: '#8d5524', face: 'dog' },
-    'CheekyBritishPerson1': { nick: 'CHEEKY', gk: 1, lb: 1, cb: 1, rb: 1, cm: 5, lw: 5, rw: 5, st: 5, pwr: 'SIDHU', skin: '#ffffff', hair: 'bacon' },
-    'CristianoRonaldo9604': { nick: 'CRISTIANO', gk: 5, lb: 8, cb: 9, rb: 8, cm: 0, lw: 0, rw: 0, st: 0, pwr: 'DOG POWER', skin: '#c68642', face: 'dog' },
-    'dvrianz': { nick: 'DVR', gk: 1, lb: 9, cb: 8, rb: 9, cm: 7, lw: 2, rw: 2, st: 2, pwr: 'OG PLAYER', skin: '#000000' },
-    'E_Militao': { nick: 'EDER', gk: 8, lb: 9, cb: 9, rb: 9, cm: 7, lw: 2, rw: 2, st: 2, pwr: 'SHUTDOWN', skin: '#c68642', goatee: true },
-    'ElTatoYorugua': { nick: 'LEYENDA', gk: 0, lb: 8, cb: 8, rb: 8, cm: 9, lw: 7, rw: 7, st: 7, pwr: 'MILANESA', skin: '#ffdbac', hat: 'redcap' },
-    'EnesxRlo': { nick: 'ENES', gk: 2, lb: 8, cb: 7, rb: 7, cm: 7, lw: 2, rw: 2, st: 2, pwr: 'TACKLE-O-MATIC', skin: '#ffffff', antlers: true },
-    'Fafumz': { nick: 'FAF', gk: 0, lb: 7, cb: 0, rb: 7, cm: 7, lw: 5, rw: 5, st: 5, pwr: "C'EST", skin: '#ffffff', hair: 'black' },
-    'iHyperReal': { nick: 'ARDA', gk: 0, lb: 2, cb: 0, rb: 2, cm: 7, lw: 9, rw: 9, st: 9, pwr: 'TYPEWRITER', skin: '#000000', hair: 'highlights' },
-    'J0ffPerc': { nick: 'J0FF', gk: 0, lb: 9, cb: 5, rb: 9, cm: 5, lw: 0, rw: 0, st: 0, pwr: 'GYM', skin: '#000000', hair: 'spiky' },
-    'JellozBenz': { nick: 'JELLO', gk: 0, lb: 8.5, cb: 7, rb: 8.5, cm: 9, lw: 8, rw: 8, st: 9, pwr: 'OG PLAYER', skin: '#000000', aura: true },
-    'kenenmusss': { nick: 'KAAN', gk: 7, lb: 7, cb: 7, rb: 7, cm: 9, lw: 7, rw: 7, st: 7, pwr: 'ASKIM', skin: '#000000', hair: 'straight' },
-    'mageman5304': { nick: 'MAGE', gk: 0, lb: 9, cb: 9, rb: 9, cm: 5, lw: 0, rw: 0, st: 0, pwr: 'LOCKDOWN', skin: '#000000', hat: 'black' },
-    'nascarremy16': { nick: 'REMY', gk: 0, lb: 0, cb: 0, rb: 0, cm: 5, lw: 5, rw: 5, st: 5, pwr: 'INVISIBLILITY', skin: '#3d2b1f', hair: 'dreads' },
-    'petnilongo3': { nick: 'KAYN', gk: 0, lb: 0, cb: 0, rb: 0, cm: 9, lw: 9, rw: 9, st: 9, pwr: 'FEIJOADA', skin: '#000000', hat: 'diamond' },
-    'psychx777': { nick: 'PSYCH', gk: 0, lb: 0, cb: 0, rb: 0, cm: 9, lw: 9, rw: 9, st: 9, pwr: '7', skin: '#ffffff', aura: true, antlers: true },
-    'Salomaoarruda': { nick: 'SALAMANCA', gk: 0, lb: 0, cb: 0, rb: 0, cm: 5, lw: 9, rw: 9, st: 9, pwr: 'EGOIST', skin: '#c68642', hair: 'covering' },
-    'TG37074': { nick: 'TG', gk: 9, lb: 0, cb: 0, rb: 0, cm: 0, lw: 0, rw: 0, st: 0, pwr: 'YES SAR', skin: '#000000', face: 'fire' },
-    'Tyranizard89': { nick: 'TYRAN', gk: 9, lb: 0, cb: 0, rb: 0, cm: 0, lw: 0, rw: 0, st: 0, pwr: 'DINOSAUR', skin: '#8d5524', face: 'dino' }
+    '15Goalies': { nick: 'CHRIS B', skin: '#ffdbac' },
+    '1300Melvin': { nick: 'MELVIN', skin: '#ffffff', hat: 'grad' },
+    'angelolee1919': { nick: 'ANGELO', skin: '#8d5524', face: 'dog' },
+    'CheekyBritishPerson1': { nick: 'CHEEKY', skin: '#ffffff' },
+    'CristianoRonaldo9604': { nick: 'CRISTIANO', skin: '#c68642', face: 'dog' },
+    'dvrianz': { nick: 'DVR', skin: '#444' },
+    'E_Militao': { nick: 'EDER', skin: '#c68642' },
+    'ElTatoYorugua': { nick: 'LEYENDA', skin: '#ffdbac', hat: 'redcap' },
+    'EnesxRlo': { nick: 'ENES', skin: '#ffffff', antlers: true },
+    'Fafumz': { nick: 'FAF', skin: '#ffffff' },
+    'iHyperReal': { nick: 'ARDA', skin: '#444' },
+    'J0ffPerc': { nick: 'J0FF', skin: '#333' },
+    'JellozBenz': { nick: 'JELLO', skin: '#444', aura: true },
+    'kenenmusss': { nick: 'KAAN', skin: '#444' },
+    'mageman5304': { nick: 'MAGE', skin: '#333', hat: 'black' },
+    'nascarremy16': { nick: 'REMY', skin: '#3d2b1f' },
+    'petnilongo3': { nick: 'KAYN', skin: '#333', hat: 'diamond' },
+    'psychx777': { nick: 'PSYCH', skin: '#ffffff', aura: true, antlers: true },
+    'Salomaoarruda': { nick: 'SALAMANCA', skin: '#c68642' },
+    'TG37074': { nick: 'TG', skin: '#333', face: 'fire' },
+    'Tyranizard89': { nick: 'TYRAN', skin: '#8d5524', face: 'dino' }
 };
 
 const keys = Object.keys(PLAYER_DB);
-let userTeam = [keys[2], keys[5], keys[13], keys[1]]; 
-let gamePaused = false;
-let pwrMeter = 0;
+let userTeamKeys = [keys[2], keys[5], keys[13], keys[1]];
+let gameTime = 300;
+let matchActive = false;
+let score = [0, 0];
+let joy = { x: 0, y: 0, active: false };
+let players = [];
+let ball = { x: 0, y: 0, vx: 0, vy: 0, r: 10 };
 
-// Selection Logic
-const container = document.getElementById('selectors-container');
+// Render Logic for Avatars
+function drawAvatar(ctx, x, y, k, teamColor, isPlayer = true) {
+    const data = PLAYER_DB[k];
+    ctx.save();
+    ctx.translate(x, y);
+
+    // Jersey
+    ctx.fillStyle = teamColor;
+    ctx.beginPath(); ctx.roundRect(-15, 5, 30, 25, 5); ctx.fill();
+
+    // Head
+    ctx.fillStyle = data.skin;
+    ctx.beginPath(); ctx.arc(0, -5, 14, 0, 7); ctx.fill();
+
+    // Eyes
+    ctx.fillStyle = 'white';
+    ctx.beginPath(); ctx.arc(-5, -7, 3, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(5, -7, 3, 0, 7); ctx.fill();
+    ctx.fillStyle = 'black';
+    ctx.beginPath(); ctx.arc(-5, -7, 1.5, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(5, -7, 1.5, 0, 7); ctx.fill();
+
+    // Specific Traits
+    if(data.face === 'dog') { ctx.fillStyle='#444'; ctx.beginPath(); ctx.arc(-13, -5, 5, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(13, -5, 5, 0, 7); ctx.fill(); }
+    if(data.hat === 'grad') { ctx.fillStyle='black'; ctx.fillRect(-12,-18,24,4); ctx.fillRect(-2,-22,4,8); }
+    if(data.face === 'fire') { ctx.fillStyle='orange'; ctx.beginPath(); ctx.moveTo(-8,-10); ctx.lineTo(0,-25); ctx.lineTo(8,-10); ctx.fill(); }
+    if(data.antlers) { ctx.strokeStyle='#4b3621'; ctx.beginPath(); ctx.moveTo(-5,-10); ctx.lineTo(-12,-20); ctx.stroke(); }
+
+    if(isPlayer) {
+        ctx.fillStyle = 'white'; ctx.font = 'bold 12px Arial'; ctx.textAlign = 'center';
+        ctx.fillText(data.nick, 0, -30);
+    }
+    ctx.restore();
+}
+
+// Locker Room Cycle
+const selDiv = document.getElementById('selectors');
 ["GK", "DEF", "MID", "ATT"].forEach((pos, i) => {
-    container.innerHTML += `<div class="slot"><h3>${pos}</h3><div class="selector">
-    <button class="arrow" onclick="cycle(${i},-1)">◀</button>
-    <div class="name-display" id="n-${i}">-</div>
-    <button class="arrow" onclick="cycle(${i},1)">▶</button>
-    </div></div>`;
+    selDiv.innerHTML += `<div class="slot"><b>${pos}</b><br><span id="name-${i}">${PLAYER_DB[userTeamKeys[i]].nick}</span><br>
+    <button class="cycle-btn" onclick="cycle(${i},-1)">◀</button> <button class="cycle-btn" onclick="cycle(${i},1)">▶</button></div>`;
 });
 
 function cycle(slot, dir) {
-    let currentKey = userTeam[slot];
-    let idx = keys.indexOf(currentKey);
-    let found = false;
-    while(!found) {
-        idx = (idx + dir + keys.length) % keys.length;
-        if(!userTeam.includes(keys[idx]) || keys[idx] === currentKey) {
-            userTeam[slot] = keys[idx];
-            found = true;
-        }
-    }
-    updateUI();
+    let idx = keys.indexOf(userTeamKeys[slot]);
+    do { idx = (idx + dir + keys.length) % keys.length; } while (userTeamKeys.includes(keys[idx]));
+    userTeamKeys[slot] = keys[idx];
+    document.getElementById(`name-${slot}`).innerText = PLAYER_DB[userTeamKeys[slot]].nick;
+    renderLocker();
 }
 
-function updateUI() {
-    userTeam.forEach((k, i) => document.getElementById(`n-${i}`).innerText = PLAYER_DB[k].nick);
+function renderLocker() {
+    userTeamKeys.forEach((k, i) => {
+        const c = document.getElementById(`pre-${i}`);
+        const ctxP = c.getContext('2d');
+        ctxP.clearRect(0,0,c.width,c.height);
+        drawAvatar(ctxP, c.width/2, 60, k, '#00d2ff', false);
+    });
 }
-updateUI();
+renderLocker();
 
-// Game Logic
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-let ball = { x: 0, y: 0, vx: 0, vy: 0, r: 8 };
-let players = [];
-let score = [0, 0];
-let joy = { x: 0, y: 0, active: false };
-
-function drawAvatar(ctx, x, y, p, teamColor) {
-    const data = PLAYER_DB[p.key];
-    if(p.auraActive) {
-        ctx.shadowBlur = 15; ctx.shadowColor = 'yellow';
-    }
-    // Body
-    ctx.fillStyle = teamColor;
-    ctx.beginPath(); ctx.arc(x, y + 15, 12, 0, Math.PI, false); ctx.fill();
-    // Head
-    ctx.fillStyle = data.skin;
-    ctx.beginPath(); ctx.arc(x, y, 12, 0, Math.PI * 2); ctx.fill();
+// Timer Logic
+setInterval(() => {
+    if (!matchActive || gameTime <= 0) return;
+    gameTime--;
+    const mins = Math.floor(gameTime / 60);
+    const secs = gameTime % 60;
+    document.getElementById('timer').innerText = `${mins}:${secs.toString().padStart(2, '0')}`;
     
-    // Features
-    if(data.face === 'dog') { 
-        ctx.fillStyle = '#444'; ctx.beginPath(); ctx.arc(x-12, y-5, 5, 0, 2); ctx.fill(); ctx.arc(x+12, y-5, 5, 0, 2); ctx.fill(); 
-    }
-    if(data.face === 'dino') { ctx.fillStyle = '#228B22'; ctx.fillRect(x-4, y-16, 8, 6); }
-    if(data.face === 'fire') { 
-        ctx.fillStyle = 'orange'; ctx.beginPath(); ctx.moveTo(x-8,y-10); ctx.lineTo(x,y-25); ctx.lineTo(x+8,y-10); ctx.fill(); 
-    }
-    if(data.hat === 'grad') { ctx.fillStyle = 'black'; ctx.fillRect(x-10,y-15,20,4); ctx.fillRect(x-2,y-18,4,8); }
-    if(data.hat === 'redcap') { ctx.fillStyle = 'red'; ctx.beginPath(); ctx.arc(x,y-10,12,Math.PI,0); ctx.fill(); }
-    if(data.antlers) { ctx.strokeStyle='#4b3621'; ctx.beginPath(); ctx.moveTo(x-5,y-10); ctx.lineTo(x-12,y-20); ctx.moveTo(x+5,y-10); ctx.lineTo(x+12,y-20); ctx.stroke(); }
-    if(data.aura || p.auraActive) { ctx.strokeStyle='yellow'; ctx.beginPath(); ctx.arc(x,y,15,0,7); ctx.stroke(); }
+    if (gameTime === 0 && score[0] !== score[1]) endGame();
+}, 1000);
 
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = 'white'; ctx.font = 'bold 10px Arial'; ctx.textAlign = 'center';
-    ctx.fillText(data.nick, x, y - 28);
-}
-
-function initGame() {
-    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-    let comChoices = keys.filter(k => !userTeam.includes(k)).sort(() => 0.5 - Math.random()).slice(0, 4);
+function startGame() {
+    document.getElementById('menu').style.display = 'none';
+    const gameCanvas = document.getElementById('gameCanvas');
+    gameCanvas.style.display = 'block';
+    document.getElementById('hud').style.display = 'block';
+    document.getElementById('controls').style.display = 'block';
+    gameCanvas.width = window.innerWidth; gameCanvas.height = window.innerHeight;
+    
+    gameTime = 300; score = [0, 0];
+    matchActive = true;
+    
+    let comKeys = keys.filter(k => !userTeamKeys.includes(k)).sort(() => 0.5 - Math.random()).slice(0, 4);
     players = [];
-    userTeam.forEach((k, i) => players.push({ key: k, t: 'u', pos: i, x: 150, y: (canvas.height/5)*(i+1), s: 3.5, cur: i===3, auraActive: false }));
-    comChoices.forEach((k, i) => players.push({ key: k, t: 'c', pos: i, x: canvas.width-150, y: (canvas.height/5)*(i+1), s: 3.2, cur: false }));
-    resetBall();
-}
-
-function resetBall() { ball.x = canvas.width/2; ball.y = canvas.height/2; ball.vx = 0; ball.vy = 0; }
-
-// Powerup Logic
-function triggerPower() {
-    if(pwrMeter < 100) return;
-    let activeP = players.find(p => p.cur);
-    gamePaused = true;
-    const overlay = document.getElementById('pwr-overlay');
-    const text = document.getElementById('pwr-text');
-    text.innerText = PLAYER_DB[activeP.key].pwr;
-    overlay.style.display = 'flex';
+    userTeamKeys.forEach((k, i) => players.push({ key: k, team: 'u', x: 150, y: (gameCanvas.height/5)*(i+1), cur: i===3, s: 4 }));
+    comKeys.forEach((k, i) => players.push({ key: k, team: 'c', x: gameCanvas.width-150, y: (gameCanvas.height/5)*(i+1), cur: false, s: 3.5 }));
     
-    setTimeout(() => {
-        overlay.style.display = 'none';
-        gamePaused = false;
-        pwrMeter = 0;
-        activeP.auraActive = true;
-        activeP.s *= 1.8;
-        setTimeout(() => { activeP.s /= 1.8; activeP.auraActive = false; }, 5000);
-    }, 1500);
+    ball.x = gameCanvas.width/2; ball.y = gameCanvas.height/2; ball.vx=0; ball.vy=0;
+    requestAnimationFrame(loop);
 }
 
-// Input Handlers
-window.addEventListener('touchstart', e => {
-    const t = e.touches[0];
-    const b = document.getElementById('joy-base').getBoundingClientRect();
-    if(t.clientX > b.left && t.clientX < b.right && t.clientY > b.top && t.clientY < b.bottom) joy.active = true;
-    if(e.target.id === 'pwr-btn') triggerPower();
-    if(e.target.id === 'switch-btn') {
-        let curr = players.findIndex(p => p.cur); players[curr].cur = false;
-        players[(curr + 1) % 4].cur = true;
-    }
-    if(e.target.id === 'shoot-btn') {
-        let p = players.find(p => p.cur);
-        let tx = (p.t==='u'?canvas.width:0), ty = canvas.height/2;
-        let dx = tx-p.x, dy = ty-p.y, d = Math.sqrt(dx*dx+dy*dy);
-        ball.vx = (dx/d)*14; ball.vy = (dy/d)*14;
-    }
-});
+function endGame() {
+    matchActive = false;
+    document.getElementById('end-screen').style.display = 'flex';
+    document.getElementById('match-result').innerText = score[0] > score[1] ? "BLUE WINS!" : "RED WINS!";
+}
 
-window.addEventListener('touchmove', e => {
-    if(!joy.active) return;
-    const t = e.touches[0];
-    const b = document.getElementById('joy-base').getBoundingClientRect();
-    const dx = t.clientX-(b.left+50), dy = t.clientY-(b.top+50);
-    const dist = Math.min(40, Math.sqrt(dx*dx+dy*dy));
-    const ang = Math.atan2(dy, dx);
-    joy.x = Math.cos(ang) * (dist/40); joy.y = Math.sin(ang) * (dist/40);
-    document.getElementById('joy-stick').style.transform = `translate(${Math.cos(ang)*dist}px, ${Math.sin(ang)*dist}px)`;
-});
+function returnToLocker() {
+    document.getElementById('end-screen').style.display = 'none';
+    document.getElementById('menu').style.display = 'flex';
+    document.getElementById('gameCanvas').style.display = 'none';
+    document.getElementById('hud').style.display = 'none';
+    document.getElementById('controls').style.display = 'none';
+}
 
-window.addEventListener('touchend', () => { joy.active=false; joy.x=0; joy.y=0; document.getElementById('joy-stick').style.transform=`translate(0,0)`; });
+function loop() {
+    if (!matchActive) return;
+    const ctx = document.getElementById('gameCanvas').getContext('2d');
+    const cw = window.innerWidth, ch = window.innerHeight;
 
-function update() {
-    if(gamePaused) return;
+    ctx.fillStyle = '#1a472a'; ctx.fillRect(0,0,cw,ch);
+    ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = 4;
+    ctx.strokeRect(10, 10, cw-20, ch-20);
+    ctx.strokeRect(0, ch/2-80, 40, 160); // Goals
+    ctx.strokeRect(cw-40, ch/2-80, 40, 160);
+
     ball.x += ball.vx; ball.y += ball.vy;
-    ball.vx *= 0.985; ball.vy *= 0.985;
-    
-    if(ball.y < 20 || ball.y > canvas.height-20) ball.vy *= -1;
-    if(ball.x > canvas.width - 25 && Math.abs(ball.y - canvas.height/2) < 80) { score[0]++; resetBall(); }
-    if(ball.x < 25 && Math.abs(ball.y - canvas.height/2) < 80) { score[1]++; resetBall(); }
-    if(ball.x < 0 || ball.x > canvas.width) ball.vx *= -1;
+    ball.vx *= 0.98; ball.vy *= 0.98;
+
+    if(ball.y < ball.r || ball.y > ch-ball.r) ball.vy *= -1;
+    if(ball.x < ball.r || ball.x > cw-ball.r) {
+        if(ball.y > ch/2-80 && ball.y < ch/2+80) {
+            if(ball.x < cw/2) score[1]++; else score[0]++;
+            ball.x = cw/2; ball.y = ch/2; ball.vx=0; ball.vy=0;
+            if (gameTime <= 0) endGame(); // Golden Goal check
+        } else { ball.vx *= -1; }
+    }
+    ball.x = Math.max(ball.r, Math.min(cw-ball.r, ball.x));
+    ball.y = Math.max(ball.r, Math.min(ch-ball.r, ball.y));
 
     players.forEach(p => {
         if(p.cur) { p.x += joy.x*p.s; p.y += joy.y*p.s; }
         else {
-            let tx, ty;
-            if(p.pos === 0) { // GK
-                tx = p.t==='u'?40:canvas.width-40; ty = Math.max(canvas.height/2-60, Math.min(canvas.height/2+60, ball.y));
-            } else if(p.pos === 1) { // DEF
-                tx = p.t==='u'?150:canvas.width-150; ty = ball.y;
-            } else if(p.pos === 2) { // MID
-                tx = ball.x + (p.t==='u'?-60:60); ty = ball.y;
-            } else { // ATT
-                tx = ball.x; ty = ball.y;
-            }
-            let dx = tx-p.x, dy = ty-p.y, d = Math.sqrt(dx*dx+dy*dy);
-            if(d > 5) { p.x += (dx/d)*p.s; p.y += (dy/d)*p.s; }
+            let dx = ball.x - p.x, dy = ball.y - p.y, dist = Math.sqrt(dx*dx+dy*dy);
+            p.x += (dx/dist)*p.s; p.y += (dy/dist)*p.s;
         }
+        p.x = Math.max(20, Math.min(cw-20, p.x)); p.y = Math.max(20, Math.min(ch-20, p.y));
         let dx = ball.x-p.x, dy = ball.y-p.y, d = Math.sqrt(dx*dx+dy*dy);
-        if(d < 25) {
-            ball.vx = (dx/d)*9; ball.vy = (dy/d)*9;
-            if(p.t === 'u') pwrMeter = Math.min(100, pwrMeter + 0.5);
+        if(d < 25) { 
+            ball.vx = dx*0.6; ball.vy = dy*0.6; 
+            if (p.team === 'u') { // Indicator Arrow bounce
+                ctx.fillStyle = varColor('--neon');
+            }
         }
+        drawAvatar(ctx, p.x, p.y, p.key, p.team==='u'?'#00d2ff':'#ff3131');
     });
-    document.getElementById('scoreboard').innerText = `${score[0]} - ${score[1]}`;
-    document.getElementById('pwr-btn').className = pwrMeter >= 100 ? 'game-btn ready' : 'game-btn';
-}
 
-function draw() {
-    ctx.fillStyle = '#1e4d1e'; ctx.fillRect(0,0,canvas.width,canvas.height);
-    ctx.strokeStyle = 'white'; ctx.lineWidth = 4;
-    ctx.strokeRect(5, canvas.height/2-80, 25, 160);
-    ctx.strokeRect(canvas.width-30, canvas.height/2-80, 25, 160);
-    
     ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.r, 0, 7); ctx.fill();
-    players.forEach(p => drawAvatar(ctx, p.x, p.y, p, p.t==='u'?'#00d2ff':'#ff007f'));
+    document.getElementById('scoreboard').innerText = `BLUE ${score[0]} - ${score[1]} RED`;
+    requestAnimationFrame(loop);
 }
 
-function loop() { update(); draw(); requestAnimationFrame(loop); }
+// Controller Logic
+window.addEventListener('touchstart', e => {
+    const t = e.touches[0];
+    const b = document.getElementById('joy-base').getBoundingClientRect();
+    if(t.clientX > b.left && t.clientX < b.right) joy.active = true;
+    if(e.target.id === 'switch-btn') {
+        let idx = players.findIndex(p => p.cur); players[idx].cur = false;
+        players[(idx + 1) % 4].cur = true;
+    }
+    if(e.target.id === 'shoot-btn') {
+        let p = players.find(p => p.cur);
+        let dx = (p.team==='u'?window.innerWidth:0)-p.x, dy = (window.innerHeight/2)-p.y, d = Math.sqrt(dx*dx+dy*dy);
+        ball.vx = (dx/d)*18; ball.vy = (dy/d)*18;
+    }
+});
+window.addEventListener('touchmove', e => {
+    if(!joy.active) return;
+    const t = e.touches[0];
+    const b = document.getElementById('joy-base').getBoundingClientRect();
+    joy.x = (t.clientX - (b.left + 50)) / 40; joy.y = (t.clientY - (b.top + 50)) / 40;
+    document.getElementById('joy-stick').style.transform = `translate(${joy.x*25}px, ${joy.y*25}px)`;
+});
+window.addEventListener('touchend', () => { joy.active=false; joy.x=0; joy.y=0; document.getElementById('joy-stick').style.transform=`translate(0,0)`; });
 
-document.getElementById('start-btn').onclick = () => {
-    document.getElementById('menu-screen').style.display = 'none';
-    document.getElementById('controls').style.display = 'block';
-    document.getElementById('hud').style.display = 'block';
-    canvas.style.display = 'block';
-    initGame(); loop();
-};
+function varColor(name) { return getComputedStyle(document.documentElement).getPropertyValue(name); }
 </script>
 </body>
 </html>
