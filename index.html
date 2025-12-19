@@ -3,58 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NNSC Clash: Locker Room</title>
+    <title>NNSC Clash: Pro League</title>
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <style>
         :root { --gold: #ffd700; --blue: #00d2ff; --red: #ff3131; --neon: #39ff14; --dark: #05050a; }
         body { margin: 0; overflow: hidden; background: #000; font-family: 'Arial Black', sans-serif; color: white; touch-action: none; }
         
-        /* Menu & Locker Room */
+        /* PWA Lock - Safari Specific */
+        #pwa-enforce {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--dark); z-index: 9999; align-items: center; justify-content: center; text-align: center; padding: 20px;
+        }
+        .pwa-box { border: 2px solid var(--blue); padding: 30px; border-radius: 20px; background: #111; }
+
         #menu {
             position: absolute; width: 100%; height: 100%; background: radial-gradient(circle, #1a1a2e 0%, #000 100%);
-            z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 20px;
+            z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 10px;
         }
-        #locker-room-display {
-            display: flex; justify-content: center; align-items: flex-end; gap: 20px;
-            width: 100%; height: 180px; margin-bottom: 10px; border-bottom: 2px solid rgba(255,255,255,0.1);
-        }
-        .locker-canvas { background: transparent; width: 80px; height: 120px; }
+        #locker-room-display { display: flex; justify-content: center; align-items: flex-end; gap: 15px; width: 100%; height: 160px; margin-bottom: 10px; }
+        .locker-canvas { background: transparent; width: 70px; height: 110px; }
         
-        .sel-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 95%; max-width: 800px; }
-        .slot { background: rgba(255,255,255,0.05); border: 1px solid var(--blue); border-radius: 10px; padding: 5px; text-align: center; font-size: 0.7rem; }
-        .cycle-btn { background: var(--blue); border: none; color: white; padding: 8px; border-radius: 5px; margin: 2px; }
+        .sel-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: 95%; max-width: 800px; }
+        .slot { background: rgba(255,255,255,0.05); border: 1px solid var(--blue); border-radius: 10px; padding: 5px; text-align: center; font-size: 0.65rem; }
+        .cycle-btn { background: var(--blue); border: none; color: white; padding: 6px; border-radius: 5px; margin: 2px; }
 
-        /* HUD */
         #hud { display: none; position: absolute; top: 10px; width: 100%; text-align: center; z-index: 60; pointer-events: none; }
-        #scoreboard { font-size: 1.8rem; text-shadow: 2px 2px #000; }
-        #timer { font-size: 1.2rem; color: var(--gold); }
+        #scoreboard { font-size: 2rem; text-shadow: 2px 2px #000; font-style: italic; }
+        #timer { font-size: 1rem; color: var(--gold); background: rgba(0,0,0,0.5); padding: 2px 10px; border-radius: 10px; display: inline-block; }
 
-        /* Game UI */
         #controls { display: none; position: absolute; bottom: 0; width: 100%; height: 180px; z-index: 50; }
         #joy-base { position: absolute; bottom: 30px; left: 30px; width: 100px; height: 100px; background: rgba(255,255,255,0.1); border-radius: 50%; border: 2px solid white; }
-        #joy-stick { position: absolute; top: 25px; left: 25px; width: 50px; height: 50px; background: white; border-radius: 50%; }
+        #joy-stick { position: absolute; top: 25px; left: 25px; width: 50px; height: 50px; background: white; border-radius: 50%; box-shadow: 0 0 10px white; }
         
-        .btn-grid { position: absolute; bottom: 30px; right: 30px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .g-btn { width: 65px; height: 65px; border-radius: 50%; border: 3px solid white; color: white; font-weight: bold; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; }
+        .btn-grid { position: absolute; bottom: 30px; right: 30px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .g-btn { width: 65px; height: 65px; border-radius: 50%; border: 2px solid white; color: white; font-weight: bold; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; }
 
-        #end-screen { 
-            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.9); z-index: 300; flex-direction: column; align-items: center; justify-content: center;
-        }
-
-        canvas { display: none; }
+        canvas { display: none; background: #1a472a; }
     </style>
 </head>
 <body>
 
-<div id="end-screen">
-    <h1 id="match-result" style="font-size: 3rem;">FULL TIME</h1>
-    <button style="padding: 15px 40px; background: var(--blue); color: white; border: none; border-radius: 20px;" onclick="returnToLocker()">RETURN TO LOCKER ROOM</button>
+<div id="pwa-enforce">
+    <div class="pwa-box">
+        <h2 style="color: var(--blue)">SAFARI INSTALL REQUIRED</h2>
+        <p>1. Tap the <b>Share</b> button (square with arrow).</p>
+        <p>2. Scroll down and tap <b>'Add to Home Screen'</b>.</p>
+        <p>This ensures the game works in full-screen mode.</p>
+    </div>
 </div>
 
 <div id="menu">
-    <h1 style="color: var(--blue); margin: 0; font-size: 1.5rem;">NNSC LOCKER ROOM</h1>
+    <h1 style="color: var(--blue); margin: 5px; font-size: 1.2rem; font-style: italic;">NNSC LOCKER ROOM</h1>
     <div id="locker-room-display">
         <canvas id="pre-0" class="locker-canvas"></canvas>
         <canvas id="pre-1" class="locker-canvas"></canvas>
@@ -62,12 +63,12 @@
         <canvas id="pre-3" class="locker-canvas"></canvas>
     </div>
     <div class="sel-grid" id="selectors"></div>
-    <button style="margin-top: 15px; padding: 12px 60px; border-radius: 30px; background: var(--red); color: white; border: none; font-weight: bold;" onclick="startGame()">KICK OFF</button>
+    <button style="margin-top: 10px; padding: 12px 60px; border-radius: 30px; background: var(--red); color: white; border: none; font-weight: bold; box-shadow: 0 0 20px var(--red);" onclick="startGame()">KICK OFF</button>
 </div>
 
 <div id="hud">
-    <div id="timer">05:00</div>
     <div id="scoreboard">BLUE 0 - 0 RED</div>
+    <div id="timer">05:00</div>
 </div>
 
 <div id="controls">
@@ -116,42 +117,68 @@ let joy = { x: 0, y: 0, active: false };
 let players = [];
 let ball = { x: 0, y: 0, vx: 0, vy: 0, r: 10 };
 
-// Render Logic for Avatars
-function drawAvatar(ctx, x, y, k, teamColor, isPlayer = true) {
+// PWA Logic for Safari
+if (!window.navigator.standalone && /iPhone|iPad|iPod/.test(navigator.userAgent)) {
+    document.getElementById('pwa-enforce').style.display = 'flex';
+}
+
+function drawAvatar(ctx, x, y, k, teamColor, isSelected = false) {
     const data = PLAYER_DB[k];
     ctx.save();
     ctx.translate(x, y);
 
-    // Jersey
+    // Selection Highlight (The Ring)
+    if (isSelected) {
+        ctx.shadowBlur = 15; ctx.shadowColor = '#39ff14';
+        ctx.strokeStyle = '#39ff14'; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.ellipse(0, 22, 22, 10, 0, 0, 7); ctx.stroke();
+        // Pulsing Arrow
+        const bounce = Math.sin(Date.now() / 200) * 5;
+        ctx.fillStyle = '#39ff14'; ctx.beginPath(); 
+        ctx.moveTo(-8, -55 + bounce); ctx.lineTo(8, -55 + bounce); ctx.lineTo(0, -42 + bounce); ctx.fill();
+        ctx.shadowBlur = 0;
+    }
+
+    // Body
     ctx.fillStyle = teamColor;
     ctx.beginPath(); ctx.roundRect(-15, 5, 30, 25, 5); ctx.fill();
-
-    // Head
+    
+    // Face Depth & Ears
     ctx.fillStyle = data.skin;
-    ctx.beginPath(); ctx.arc(0, -5, 14, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(-14, -5, 4, 0, 7); ctx.fill(); // Left Ear
+    ctx.beginPath(); ctx.arc(14, -5, 4, 0, 7); ctx.fill();  // Right Ear
+    ctx.beginPath(); ctx.arc(0, -5, 15, 0, 7); ctx.fill();
 
-    // Eyes
+    // Eyes (More Realistic)
     ctx.fillStyle = 'white';
-    ctx.beginPath(); ctx.arc(-5, -7, 3, 0, 7); ctx.fill();
-    ctx.beginPath(); ctx.arc(5, -7, 3, 0, 7); ctx.fill();
-    ctx.fillStyle = 'black';
-    ctx.beginPath(); ctx.arc(-5, -7, 1.5, 0, 7); ctx.fill();
-    ctx.beginPath(); ctx.arc(5, -7, 1.5, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(-6, -7, 4, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(6, -7, 4, 0, 7); ctx.fill();
+    ctx.fillStyle = '#222';
+    ctx.beginPath(); ctx.arc(-6, -7, 2, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(6, -7, 2, 0, 7); ctx.fill();
 
-    // Specific Traits
-    if(data.face === 'dog') { ctx.fillStyle='#444'; ctx.beginPath(); ctx.arc(-13, -5, 5, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(13, -5, 5, 0, 7); ctx.fill(); }
-    if(data.hat === 'grad') { ctx.fillStyle='black'; ctx.fillRect(-12,-18,24,4); ctx.fillRect(-2,-22,4,8); }
-    if(data.face === 'fire') { ctx.fillStyle='orange'; ctx.beginPath(); ctx.moveTo(-8,-10); ctx.lineTo(0,-25); ctx.lineTo(8,-10); ctx.fill(); }
-    if(data.antlers) { ctx.strokeStyle='#4b3621'; ctx.beginPath(); ctx.moveTo(-5,-10); ctx.lineTo(-12,-20); ctx.stroke(); }
+    // Traits
+    if(data.face === 'dog') { ctx.fillStyle='#444'; ctx.beginPath(); ctx.arc(-15, -5, 6, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(15, -5, 6, 0, 7); ctx.fill(); }
+    if(data.hat === 'grad') { ctx.fillStyle='black'; ctx.fillRect(-14,-20,28,4); ctx.fillRect(-2,-25,4,10); }
 
-    if(isPlayer) {
-        ctx.fillStyle = 'white'; ctx.font = 'bold 12px Arial'; ctx.textAlign = 'center';
-        ctx.fillText(data.nick, 0, -30);
-    }
+    ctx.fillStyle = 'white'; ctx.font = 'bold 11px Arial'; ctx.textAlign = 'center';
+    ctx.fillText(data.nick, 0, -32);
     ctx.restore();
 }
 
-// Locker Room Cycle
+// Position Logic AI
+function getPositionGoal(p, cw, ch) {
+    const isU = p.team === 'u';
+    const side = isU ? 0 : cw;
+    switch(p.posType) {
+        case 0: return { x: isU ? 60 : cw - 60, y: Math.max(ch/2-60, Math.min(ch/2+60, ball.y)) }; // GK
+        case 1: return { x: isU ? 200 : cw - 200, y: ball.y * 0.5 + ch/4 }; // DEF
+        case 2: return { x: cw/2 + (isU ? -100 : 100), y: ball.y }; // MID
+        case 3: return { x: ball.x, y: ball.y }; // ATT
+    }
+}
+
+// Locker Room System
 const selDiv = document.getElementById('selectors');
 ["GK", "DEF", "MID", "ATT"].forEach((pos, i) => {
     selDiv.innerHTML += `<div class="slot"><b>${pos}</b><br><span id="name-${i}">${PLAYER_DB[userTeamKeys[i]].nick}</span><br>
@@ -176,17 +203,6 @@ function renderLocker() {
 }
 renderLocker();
 
-// Timer Logic
-setInterval(() => {
-    if (!matchActive || gameTime <= 0) return;
-    gameTime--;
-    const mins = Math.floor(gameTime / 60);
-    const secs = gameTime % 60;
-    document.getElementById('timer').innerText = `${mins}:${secs.toString().padStart(2, '0')}`;
-    
-    if (gameTime === 0 && score[0] !== score[1]) endGame();
-}, 1000);
-
 function startGame() {
     document.getElementById('menu').style.display = 'none';
     const gameCanvas = document.getElementById('gameCanvas');
@@ -195,30 +211,15 @@ function startGame() {
     document.getElementById('controls').style.display = 'block';
     gameCanvas.width = window.innerWidth; gameCanvas.height = window.innerHeight;
     
-    gameTime = 300; score = [0, 0];
-    matchActive = true;
-    
+    score = [0,0]; gameTime = 300; matchActive = true;
     let comKeys = keys.filter(k => !userTeamKeys.includes(k)).sort(() => 0.5 - Math.random()).slice(0, 4);
-    players = [];
-    userTeamKeys.forEach((k, i) => players.push({ key: k, team: 'u', x: 150, y: (gameCanvas.height/5)*(i+1), cur: i===3, s: 4 }));
-    comKeys.forEach((k, i) => players.push({ key: k, team: 'c', x: gameCanvas.width-150, y: (gameCanvas.height/5)*(i+1), cur: false, s: 3.5 }));
     
-    ball.x = gameCanvas.width/2; ball.y = gameCanvas.height/2; ball.vx=0; ball.vy=0;
+    players = [];
+    userTeamKeys.forEach((k, i) => players.push({ key: k, team: 'u', posType: i, x: 100, y: 100*i, cur: i===3, s: 4.5 }));
+    comKeys.forEach((k, i) => players.push({ key: k, team: 'c', posType: i, x: gameCanvas.width-100, y: 100*i, cur: false, s: 3.8 }));
+    
+    ball = { x: gameCanvas.width/2, y: gameCanvas.height/2, vx: 0, vy: 0, r: 10 };
     requestAnimationFrame(loop);
-}
-
-function endGame() {
-    matchActive = false;
-    document.getElementById('end-screen').style.display = 'flex';
-    document.getElementById('match-result').innerText = score[0] > score[1] ? "BLUE WINS!" : "RED WINS!";
-}
-
-function returnToLocker() {
-    document.getElementById('end-screen').style.display = 'none';
-    document.getElementById('menu').style.display = 'flex';
-    document.getElementById('gameCanvas').style.display = 'none';
-    document.getElementById('hud').style.display = 'none';
-    document.getElementById('controls').style.display = 'none';
 }
 
 function loop() {
@@ -227,20 +228,19 @@ function loop() {
     const cw = window.innerWidth, ch = window.innerHeight;
 
     ctx.fillStyle = '#1a472a'; ctx.fillRect(0,0,cw,ch);
-    ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = 4;
-    ctx.strokeRect(10, 10, cw-20, ch-20);
-    ctx.strokeRect(0, ch/2-80, 40, 160); // Goals
-    ctx.strokeRect(cw-40, ch/2-80, 40, 160);
+    // Grass Texture
+    ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 2;
+    for(let i=0; i<cw; i+=40) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,ch); ctx.stroke(); }
 
     ball.x += ball.vx; ball.y += ball.vy;
-    ball.vx *= 0.98; ball.vy *= 0.98;
+    ball.vx *= 0.985; ball.vy *= 0.985;
 
+    // Boundaries
     if(ball.y < ball.r || ball.y > ch-ball.r) ball.vy *= -1;
     if(ball.x < ball.r || ball.x > cw-ball.r) {
         if(ball.y > ch/2-80 && ball.y < ch/2+80) {
             if(ball.x < cw/2) score[1]++; else score[0]++;
             ball.x = cw/2; ball.y = ch/2; ball.vx=0; ball.vy=0;
-            if (gameTime <= 0) endGame(); // Golden Goal check
         } else { ball.vx *= -1; }
     }
     ball.x = Math.max(ball.r, Math.min(cw-ball.r, ball.x));
@@ -249,18 +249,17 @@ function loop() {
     players.forEach(p => {
         if(p.cur) { p.x += joy.x*p.s; p.y += joy.y*p.s; }
         else {
-            let dx = ball.x - p.x, dy = ball.y - p.y, dist = Math.sqrt(dx*dx+dy*dy);
-            p.x += (dx/dist)*p.s; p.y += (dy/dist)*p.s;
+            let target = getPositionGoal(p, cw, ch);
+            let dx = target.x - p.x, dy = target.y - p.y;
+            let dist = Math.sqrt(dx*dx+dy*dy);
+            if(dist > 5) { p.x += (dx/dist)*p.s; p.y += (dy/dist)*p.s; }
         }
-        p.x = Math.max(20, Math.min(cw-20, p.x)); p.y = Math.max(20, Math.min(ch-20, p.y));
+        p.x = Math.max(20, Math.min(cw-20, p.x));
+        p.y = Math.max(20, Math.min(ch-20, p.y));
+
         let dx = ball.x-p.x, dy = ball.y-p.y, d = Math.sqrt(dx*dx+dy*dy);
-        if(d < 25) { 
-            ball.vx = dx*0.6; ball.vy = dy*0.6; 
-            if (p.team === 'u') { // Indicator Arrow bounce
-                ctx.fillStyle = varColor('--neon');
-            }
-        }
-        drawAvatar(ctx, p.x, p.y, p.key, p.team==='u'?'#00d2ff':'#ff3131');
+        if(d < 25) { ball.vx = dx*0.6; ball.vy = dy*0.6; }
+        drawAvatar(ctx, p.x, p.y, p.key, p.team==='u'?'#00d2ff':'#ff3131', p.cur);
     });
 
     ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.r, 0, 7); ctx.fill();
@@ -280,7 +279,7 @@ window.addEventListener('touchstart', e => {
     if(e.target.id === 'shoot-btn') {
         let p = players.find(p => p.cur);
         let dx = (p.team==='u'?window.innerWidth:0)-p.x, dy = (window.innerHeight/2)-p.y, d = Math.sqrt(dx*dx+dy*dy);
-        ball.vx = (dx/d)*18; ball.vy = (dy/d)*18;
+        ball.vx = (dx/d)*20; ball.vy = (dy/d)*20;
     }
 });
 window.addEventListener('touchmove', e => {
@@ -288,11 +287,16 @@ window.addEventListener('touchmove', e => {
     const t = e.touches[0];
     const b = document.getElementById('joy-base').getBoundingClientRect();
     joy.x = (t.clientX - (b.left + 50)) / 40; joy.y = (t.clientY - (b.top + 50)) / 40;
-    document.getElementById('joy-stick').style.transform = `translate(${joy.x*25}px, ${joy.y*25}px)`;
+    document.getElementById('joy-stick').style.transform = `translate(${Math.max(-40, Math.min(40, joy.x*40))}px, ${Math.max(-40, Math.min(40, joy.y*40))}px)`;
 });
 window.addEventListener('touchend', () => { joy.active=false; joy.x=0; joy.y=0; document.getElementById('joy-stick').style.transform=`translate(0,0)`; });
 
-function varColor(name) { return getComputedStyle(document.documentElement).getPropertyValue(name); }
+// Timer Logic
+setInterval(() => { if(matchActive && gameTime > 0) {
+    gameTime--;
+    let m = Math.floor(gameTime/60), s = gameTime%60;
+    document.getElementById('timer').innerText = `${m}:${s < 10 ? '0'+s : s}`;
+}}, 1000);
 </script>
 </body>
 </html>
