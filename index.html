@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NNSC Clash</title>
+    <style>
+        :root { --gold: #ffd700; --blue: #00d2ff; --pink: #ff007f; --grass: #228B22; }
+        body { margin: 0; overflow: hidden; background: #111; font-family: 'Arial Black', sans-serif; color: white; touch-action: none; }
+        
+        /* UI OVERLAY */
+        #menu-screen {
+            position: absolute; width: 100%; height: 100%;
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://www.transparenttextures.com/patterns/carbon-fibre.png'), #1a1a2e;
+            display: flex; flex-direction: column; align-items: center; z-index: 100; overflow-y: auto; padding-bottom: 50px;
+        }
+        
+        .header { font-size: 3rem; font-style: italic; color: var(--blue); text-shadow: 3px 3px var(--pink); margin: 20px 0; }
+        
+        .selection-grid { display: flex; flex-direction: column; gap: 15px; width: 90%; max-width: 400px; }
+        .slot { background: rgba(255,255,255,0.1); border: 2px solid var(--blue); border-radius: 15px; padding: 15px; text-align: center; }
+        .slot h3 { margin: 0 0 10px 0; color: var(--pink); font-size: 0.9rem; }
+        .selector { display: flex; align-items: center; justify-content: space-between; }
+        .arrow { background: var(--blue); border: none; color: white; padding: 10px 15px; border-radius: 8px; font-weight: bold; }
+        .name-display { font-size: 1.2rem; min-width: 140px; }
+        .stars { color: var(--gold); margin-top: 5px; font-size: 1.2rem; }
+        .power-name { font-size: 0.7rem; color: #aaa; margin-top: 5px; text-transform: uppercase; }
+
+        #start-btn { 
+            margin-top: 30px; padding: 20px 60px; font-size: 1.8rem; background: var(--pink); 
+            border: none; border-radius: 50px; color: white; box-shadow: 0 0 20px var(--pink);
+        }
+
+        /* GAME CANVAS */
+        canvas { display: none; }
+        
+        /* CONTROLS */
+        #controls { display: none; position: absolute; bottom: 0; width: 100%; height: 200px; z-index: 50; }
+        #joystick-area { position: absolute; bottom: 40px; left: 40px; width: 120px; height: 120px; background: rgba(255,255,255,0.2); border-radius: 50%; }
+        #joystick-stick { position: absolute; top: 35px; left: 35px; width: 50px; height: 50px; background: white; border-radius: 50%; }
+        #action-btn { position: absolute; bottom: 60px; right: 40px; width: 80px; height: 80px; background: var(--pink); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 4px solid white; }
+        
+        #scoreboard { position: absolute; top: 20px; width: 100%; text-align: center; font-size: 2rem; display: none; z-index: 60; text-shadow: 2px 2px black; }
+    </style>
+</head>
+<body>
+
+<div id="menu-screen">
+    <div class="header">NNSC CLASH</div>
+    <div class="selection-grid" id="selectors-container"></div>
+    <button id="start-btn">KICK OFF</button>
+</div>
+
+<div id="scoreboard">YOU 0 - 0 COM</div>
+<div id="controls">
+    <div id="joystick-area"><div id="joystick-stick"></div></div>
+    <div id="action-btn">PWR</div>
+</div>
+
+<canvas id="gameCanvas"></canvas>
+
+<script>
+const RAW_DATA = {
+    '15Goalies': { nick: 'CHRIS B', gk: 1, lb: 9, cb: 5, rb: 8, cm: 2, lw: 1, rw: 1, st: 1, pwr: 'THE ROOKIE' },
+    '1300Melvin': { nick: 'MELVIN', gk: 0, lb: 0, cb: 0, rb: 0, cm: 5, lw: 9, rw: 9, st: 9, pwr: 'DEPENDENCY' },
+    'angelolee1919': { nick: 'ANGELO', gk: 9, lb: 8, cb: 5, rb: 8, cm: 9, lw: 9, rw: 9, st: 9, pwr: 'DOG POWER' },
+    'CheekyBritishPerson1': { nick: 'CHEEKY', gk: 1, lb: 1, cb: 1, rb: 1, cm: 5, lw: 5, rw: 5, st: 5, pwr: 'SIDHU' },
+    'CristianoRonaldo9604': { nick: 'CRISTIANO', gk: 5, lb: 8, cb: 9, rb: 8, cm: 0, lw: 0, rw: 0, st: 0, pwr: 'DOG POWER' },
+    'dvrianz': { nick: 'DVR', gk: 1, lb: 9, cb: 8, rb: 9, cm: 7, lw: 2, rw: 2, st: 2, pwr: 'OG PLAYER' },
+    'E_Militao': { nick: 'EDER', gk: 8, lb: 9, cb: 9, rb: 9, cm: 7, lw: 2, rw: 2, st: 2, pwr: 'SHUTDOWN' },
+    'ElTatoYorugua': { nick: 'LEYENDA', gk: 0, lb: 8, cb: 8, rb: 8, cm: 9, lw: 7, rw: 7, st: 7, pwr: 'MILANESA' },
+    'EnesxRlo': { nick: 'ENES', gk: 2, lb: 8, cb: 7, rb: 7, cm: 7, lw: 2, rw: 2, st: 2, pwr: 'TACKLE-O-MATIC' },
+    'Fafumz': { nick: 'FAF', gk: 0, lb: 7, cb: 0, rb: 7, cm: 7, lw: 5, rw: 5, st: 5, pwr: "C'EST" },
+    'iHyperReal': { nick: 'ARDA', gk: 0, lb: 2, cb: 0, rb: 2, cm: 7, lw: 9, rw: 9, st: 9, pwr: 'TYPEWRITER' },
+    'J0ffPerc': { nick: 'J0FF', gk: 0, lb: 9, cb: 5, rb: 9, cm: 5, lw: 0, rw: 0, st: 0, pwr: 'GYM' },
+    'JellozBenz': { nick: 'JELLO', gk: 0, lb: 8.5, cb: 7, rb: 8.5, cm: 9, lw: 8, rw: 8, st: 9, pwr: 'OG PLAYER' },
+    'kenenmusss': { nick: 'KAAN', gk: 7, lb: 7, cb: 7, rb: 7, cm: 9, lw: 7, rw: 7, st: 7, pwr: 'ASKIM' },
+    'mageman5304': { nick: 'MAGE', gk: 0, lb: 9, cb: 9, rb: 9, cm: 5, lw: 0, rw: 0, st: 0, pwr: 'LOCKDOWN' },
+    'nascarremy16': { nick: 'REMY', gk: 0, lb: 0, cb: 0, rb: 0, cm: 5, lw: 5, rw: 5, st: 5, pwr: 'INVISIBLILITY' },
+    'petnilongo3': { nick: 'KAYN', gk: 0, lb: 0, cb: 0, rb: 0, cm: 9, lw: 9, rw: 9, st: 9, pwr: 'FEIJOADA' },
+    'psychx777': { nick: 'PSYCH', gk: 0, lb: 0, cb: 0, rb: 0, cm: 9, lw: 9, rw: 9, st: 9, pwr: '7' },
+    'Salomaoarruda': { nick: 'SALAMANCA', gk: 0, lb: 0, cb: 0, rb: 0, cm: 5, lw: 9, rw: 9, st: 9, pwr: 'EGOIST' },
+    'TG37074': { nick: 'TG', gk: 9, lb: 0, cb: 0, rb: 0, cm: 0, lw: 0, rw: 0, st: 0, pwr: 'YES SAR' },
+    'Tyranizard89': { nick: 'TYRAN', gk: 9, lb: 0, cb: 0, rb: 0, cm: 0, lw: 0, rw: 0, st: 0, pwr: 'DINOSAUR' }
+};
+
+const keys = Object.keys(RAW_DATA);
+const positions = ["Goalkeeper", "Defender", "Midfielder", "Attacker"];
+let teamIndices = [19, 6, 13, 1]; // Default selection
+let comIndices = [];
+
+// Setup Menu
+const container = document.getElementById('selectors-container');
+positions.forEach((pos, i) => {
+    container.innerHTML += `
+        <div class="slot">
+            <h3>${pos.toUpperCase()}</h3>
+            <div class="selector">
+                <button class="arrow" onclick="cycle(${i}, -1)">◀</button>
+                <div class="name-display" id="name-${i}">NAME</div>
+                <button class="arrow" onclick="cycle(${i}, 1)">▶</button>
+            </div>
+            <div class="stars" id="stars-${i}">⭐⭐⭐⭐⭐</div>
+            <div class="power-name" id="pwr-${i}">POWER</div>
+        </div>
+    `;
+});
+
+function getStars(key, posIdx) {
+    const p = RAW_DATA[key];
+    let val = 0;
+    if (posIdx === 0) val = p.gk;
+    else if (posIdx === 1) val = (p.lb + p.cb + p.rb) / 3;
+    else if (posIdx === 2) val = p.cm;
+    else val = (p.lw + p.rw + p.st) / 3;
+    return "⭐".repeat(Math.max(1, Math.round((val/9)*5)));
+}
+
+function cycle(slot, dir) {
+    teamIndices[slot] = (teamIndices[slot] + dir + keys.length) % keys.length;
+    renderUI();
+}
+
+function renderUI() {
+    teamIndices.forEach((idx, i) => {
+        const key = keys[idx];
+        document.getElementById(`name-${i}`).innerText = RAW_DATA[key].nick;
+        document.getElementById(`stars-${i}`).innerText = getStars(key, i);
+        document.getElementById(`pwr-${i}`).innerText = "Skill: " + RAW_DATA[key].pwr;
+    });
+}
+renderUI();
+
+// GAME ENGINE
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+let score = [0, 0];
+let ball = { x: 0, y: 0, vx: 0, vy: 0, radius: 8 };
+let players = [];
+let joystick = { active: false, x: 0, y: 0, curX: 0, curY: 0 };
+
+function initGame() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    
+    // Create Random COM team
+    comIndices = Array.from({length: 4}, () => Math.floor(Math.random() * keys.length));
+    
+    // Spawn Players
+    players = [];
+    // User Team (Blue)
+    teamIndices.forEach((idx, i) => {
+        players.push({
+            id: i, team: 'user', nick: RAW_DATA[keys[idx]].nick,
+            x: 100, y: (canvas.height/5) * (i+1),
+            speed: 3 + (Math.random()*2), controlled: i === 3, pos: i
+        });
+    });
+    // COM Team (Red)
+    comIndices.forEach((idx, i) => {
+        players.push({
+            id: i + 4, team: 'com', nick: RAW_DATA[keys[idx]].nick,
+            x: canvas.width - 100, y: (canvas.height/5) * (i+1),
+            speed: 2.5, controlled: false, pos: i
+        });
+    });
+    
+    resetBall();
+}
+
+function resetBall() {
+    ball.x = canvas.width / 2;
+    ball.y = canvas.height / 2;
+    ball.vx = 0; ball.vy = 0;
+}
+
+// Controls
+const joyBase = document.getElementById('joystick-area');
+const joyStick = document.getElementById('joystick-stick');
+
+window.addEventListener('touchstart', e => {
+    const touch = e.touches[0];
+    const rect = joyBase.getBoundingClientRect();
+    if (touch.clientX > rect.left && touch.clientX < rect.right && touch.clientY > rect.top && touch.clientY < rect.bottom) {
+        joystick.active = true;
+        joystick.x = rect.left + 60;
+        joystick.y = rect.top + 60;
+    }
+});
+
+window.addEventListener('touchmove', e => {
+    if (!joystick.active) return;
+    const touch = e.touches[0];
+    let dx = touch.clientX - joystick.x;
+    let dy = touch.clientY - joystick.y;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    const max = 40;
+    if (dist > max) { dx *= max/dist; dy *= max/dist; }
+    joyStick.style.transform = `translate(${dx}px, ${dy}px)`;
+    joystick.curX = dx / max;
+    joystick.curY = dy / max;
+});
+
+window.addEventListener('touchend', () => {
+    joystick.active = false;
+    joystick.curX = 0; joystick.curY = 0;
+    joyStick.style.transform = `translate(0,0)`;
+});
+
+function update() {
+    // Ball Physics
+    ball.x += ball.vx;
+    ball.y += ball.vy;
+    ball.vx *= 0.98; ball.vy *= 0.98; // Friction
+    
+    // Bounds
+    if (ball.y < 0 || ball.y > canvas.height) ball.vy *= -1;
+    
+    // Goal Check
+    if (ball.x < 0) { score[1]++; resetBall(); }
+    if (ball.x > canvas.width) { score[0]++; resetBall(); }
+    document.getElementById('scoreboard').innerText = `YOU ${score[0]} - ${score[1]} COM`;
+
+    players.forEach(p => {
+        if (p.controlled) {
+            p.x += joystick.curX * p.speed;
+            p.y += joystick.curY * p.speed;
+        } else {
+            // Simple AI
+            let targetX = ball.x;
+            let targetY = ball.y;
+            if (p.team === 'com') {
+                let dx = targetX - p.x;
+                let dy = targetY - p.y;
+                let dist = Math.sqrt(dx*dx + dy*dy);
+                if (dist > 5) {
+                    p.x += (dx/dist) * p.speed;
+                    p.y += (dy/dist) * p.speed;
+                }
+            }
+        }
+        
+        // Player-Ball Collision
+        let dx = ball.x - p.x;
+        let dy = ball.y - p.y;
+        let dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist < 25) {
+            let force = p.controlled ? 8 : 5;
+            ball.vx = (dx/dist) * force;
+            ball.vy = (dy/dist) * force;
+        }
+    });
+}
+
+function draw() {
+    // Pitch
+    ctx.fillStyle = '#228B22';
+    ctx.fillRect(0,0, canvas.width, canvas.height);
+    ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+    ctx.lineWidth = 5;
+    ctx.strokeRect(10, 10, canvas.width-20, canvas.height-20);
+    ctx.beginPath(); ctx.moveTo(canvas.width/2, 0); ctx.lineTo(canvas.width/2, canvas.height); ctx.stroke();
+    
+    // Ball
+    ctx.fillStyle = 'white';
+    ctx.shadowBlur = 10; ctx.shadowColor = 'white';
+    ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Players
+    players.forEach(p => {
+        ctx.fillStyle = p.team === 'user' ? '#00d2ff' : '#ff007f';
+        ctx.beginPath(); ctx.arc(p.x, p.y, 15, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = 'white';
+        ctx.font = '10px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(p.nick, p.x, p.y - 20);
+        if (p.controlled) {
+            ctx.strokeStyle = 'yellow'; ctx.lineWidth = 3;
+            ctx.strokeRect(p.x - 18, p.y - 18, 36, 36);
+        }
+    });
+}
+
+function gameLoop() {
+    update();
+    draw();
+    requestAnimationFrame(gameLoop);
+}
+
+document.getElementById('start-btn').onclick = () => {
+    document.getElementById('menu-screen').style.display = 'none';
+    document.getElementById('controls').style.display = 'block';
+    document.getElementById('scoreboard').style.display = 'block';
+    canvas.style.display = 'block';
+    initGame();
+    gameLoop();
+};
+</script>
+</body>
+</html>
