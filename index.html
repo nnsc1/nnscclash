@@ -96,6 +96,7 @@
         <div class="g-btn" id="pass-btn" style="background: var(--blue);">PASS</div>
         <div class="g-btn" id="shoot-btn" style="background: var(--red);">SHOOT</div>
         <div class="g-btn" id="switch-btn" style="background: var(--gold); color: black;">SWITCH</div>
+        <div class="g-btn" id="power-btn" style="background: purple;">POWER</div>
         <div class="g-btn" id="tackle-btn" style="background: var(--neon); color: black;">TACKLE</div>
     </div>
 </div>
@@ -342,11 +343,20 @@ function loop() {
         }
     }
     
-    let closestCom = players.filter(p => p.team === 'c').reduce((prev, curr) => {
-        const prevDist = Math.hypot(prev.x - ball.x, prev.y - ball.y);
-        const currDist = Math.hypot(curr.x - ball.x, curr.y - ball.y);
-        return currDist < prevDist ? curr : prev;
-    }, players.filter(p => p.team === 'c')[0]); // Initial value safety
+    const comPlayers = players.filter(p => p.team === 'c');
+let closestCom = null;
+
+if (comPlayers.length > 0) {
+    closestCom = comPlayers.reduce((a, b) =>
+        Math.hypot(b.x - ball.x, b.y - ball.y) <
+        Math.hypot(a.x - ball.x, a.y - ball.y) ? b : a
+    );
+}
+    if (p.team === 'c' && closestCom && p === closestCom) {
+    tx = ball.x;
+    ty = ball.y;
+}
+
     
     players.forEach(p => {
         if (!isCelebrating) {
@@ -389,6 +399,15 @@ function loop() {
                         ty = Math.max(30, Math.min(ch - 30, ty));
                     }
                 }
+                if (!ball.owner && distToBall < 18) {
+    ball.owner = p;
+    p.touches++;
+
+    if (p.team === 'u') {
+        players.forEach(x => x.cur = false);
+        p.cur = true;
+    }
+}
                 
                 let distX = tx - p.x;
                 let distY = ty - p.y;
@@ -406,18 +425,34 @@ function loop() {
             
             // Ball Interaction
             let distToBall = Math.hypot(p.x - ball.x, p.y - ball.y);
-            if (distToBall < 22) {
-                if (!ball.owner) {
-                    ball.owner = p;
-                    p.touches++;
-                } else if (ball.owner !== p && ball.owner.team !== p.team) {
-                    // Simple steal mechanism if running into opponent
-                    if(Math.random() > 0.8) {
-                        ball.owner = p;
-                        p.touches++;
-                    }
-                }
-            }
+            if (distToBall < 18) {
+    if (!ball.owner) {
+        ball.owner = p;
+        p.touches++;
+    }
+    else if (ball.owner.team !== p.team) {
+        const stealChance = 0.015; // subtle, skill-based
+        if (Math.random() < stealChance) {
+            ball.owner = p;
+            p.touches++;
+        }
+    }
+}
+            document.getElementById('power-btn').addEventListener('touchstart', e => {
+    e.preventDefault();
+    let p = players.find(x => x.cur);
+    if (!p || p.pwrActive) return;
+
+    p.pwrActive = true;
+    p.s *= 1.6;
+
+    setTimeout(() => {
+        p.s /= 1.6;
+        p.pwrActive = false;
+    }, 3000);
+});
+
+
         }
         
         // Bounds
